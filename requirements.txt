@@ -1,0 +1,24 @@
+# Editable Git install with no remote (agentic==0.1.0)
+-e /Users/mjlindow/projects/DS/agents
+annotated-types==0.7.0
+click==8.1.8
+iniconfig==2.1.0
+loguru==0.7.3
+markdown-it-py==3.0.0
+mdurl==0.1.2
+mypy==1.15.0
+mypy-extensions==1.0.0
+packaging==24.2
+pluggy==1.5.0
+pydantic==2.11.2
+pydantic-settings==2.8.1
+pydantic_core==2.33.1
+Pygments==2.19.1
+pytest==8.3.5
+python-dotenv==1.1.0
+rich==14.0.0
+ruff==0.11.4
+shellingham==1.5.4
+typer==0.15.2
+typing-inspection==0.4.0
+typing_extensions==4.13.1

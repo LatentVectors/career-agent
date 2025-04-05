@@ -1,0 +1,27 @@
+{
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.pytest_cache": true,
+        "**/.ruff_cache": true,
+        "**/.mypy_cache": true,
+        "**/.git": true,
+        ".venv": true,
+    },
+    "python.analysis.exclude": [
+        "/data"
+    ],
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        }
+    },
+    "ruff.nativeServer": "on",
+    "python.testing.pytestArgs": [
+        "test"
+    ],
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+}
