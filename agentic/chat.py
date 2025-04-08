@@ -2,14 +2,13 @@ from pathlib import Path
 
 import typer
 from langchain.chat_models import init_chat_model
-from langchain_chroma import Chroma
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.messages.base import BaseMessage
-from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_text_splitters.character import RecursiveCharacterTextSplitter
 
-from agentic.config import PROCESSED_DATA_DIR, RAW_DATA_DIR, SETTINGS, logger
+from agentic.config import RAW_DATA_DIR, SETTINGS, get_vector_store, logger
 from agentic.scrape import PaulGrahamHTMLLoader, scrape_paul_graham
+from agentic.utils import print_max_width
 
 app = typer.Typer()
 
@@ -42,9 +41,7 @@ def download_articles(download_dir: Path = RAW_DATA_DIR) -> None:
 
 
 @app.command()
-def process_documents(
-    documents_dir: Path = RAW_DATA_DIR, db_dir: Path = PROCESSED_DATA_DIR / ".chroma"
-) -> None:
+def process_documents(documents_dir: Path = RAW_DATA_DIR) -> None:
     """Process documents into the vector store for retrieval.
 
     Args:
@@ -52,12 +49,7 @@ def process_documents(
         db_dir: The directory to save the vector store.
     """
     print("PROCESSING DOCUMENTS...")
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-    vector_store = Chroma(
-        collection_name="paul_graham_articles",
-        embedding_function=embeddings,
-        persist_directory=str(db_dir),
-    )
+    vector_store = get_vector_store()
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000, chunk_overlap=200, add_start_index=True
     )
@@ -86,6 +78,25 @@ def process_documents(
         print(f"{index} - Adding {len(segments)} segments from {file.stem} to the database...")
         vector_store.add_documents(segments, ids=ids)
     print("DONE!")
+
+
+@app.command()
+def query(query: str) -> None:
+    """Query the vector store."""
+    vector_store = get_vector_store()
+    results = vector_store.similarity_search_with_score(query)
+    for result, score in results:
+        metadata = result.metadata
+        title = metadata.get("title", "N/A")
+        date = metadata.get("date", "N/A")
+        start_index = metadata.get("start_index")
+        content = result.page_content
+        print(title)
+        print(date, end="\n")
+        print(f"- Score: {score}")
+        print(f"- Start Index: {start_index}\n")
+        print_max_width(content)
+        print("-" * 80, end="\n\n")
 
 
 @app.command()

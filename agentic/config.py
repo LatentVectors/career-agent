@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
 
+from langchain_chroma.vectorstores import Chroma
+from langchain_openai import OpenAIEmbeddings
 from loguru import logger
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -16,6 +18,8 @@ DATA_DIR = PROJECT_ROOT / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
 INTERIM_DATA_DIR = DATA_DIR / "interim"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
+
+CHROMA_DB_DIR = PROCESSED_DATA_DIR / ".chroma"
 
 if not DATA_DIR.exists():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -47,5 +51,17 @@ class Settings(BaseSettings):
 
 # Don't worry about a type error here, it should load the variable from the .env file
 SETTINGS = Settings()  # type: ignore
+
+
+def get_vector_store() -> Chroma:
+    """Get a vector store for the Paul Graham articles."""
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    vector_store = Chroma(
+        collection_name="paul_graham_articles",
+        embedding_function=embeddings,
+        persist_directory=str(CHROMA_DB_DIR),
+    )
+    return vector_store
+
 
 logger.debug(f"Project root: {PROJECT_ROOT}")
