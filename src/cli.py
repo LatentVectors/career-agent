@@ -4,6 +4,7 @@ import typer
 from langchain.schema import HumanMessage
 
 from .graph import GRAPH
+from .logging_config import logger
 from .state import State
 
 app = typer.Typer()
@@ -12,6 +13,7 @@ app = typer.Typer()
 @app.command()
 def chat() -> None:
     """Chat with the agent."""
+    logger.debug("Starting chat")
     print(GRAPH.get_graph().draw_ascii())
     print(f"\n{'=' * 75}\n")
 
