@@ -1,0 +1,195 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Python Coding Standards
+
+## Type Annotations
+- **ALWAYS** include full type annotations for all function parameters and return types
+- **EXCEPTION**: Test functions do not need return type annotations (they can use `-> None` or omit entirely)
+- Use `typing` module imports for complex types (List, Dict, Optional, Union, etc.)
+- Use `from __future__ import annotations` at the top of files for forward references
+
+## Function Signatures
+```python
+# ✅ Good - Production code
+def process_data(data: List[str], config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Process the input data according to configuration."""
+    pass
+
+# ✅ Good - Test code
+def test_process_data():
+    """Test data processing functionality."""
+    pass
+
+# ❌ Bad - Missing return type in production code
+def process_data(data: List[str], config: Dict[str, Any]):
+    pass
+```
+
+## Import Organization
+- Group imports in this order:
+  1. Standard library imports
+  2. Third-party imports
+  3. Local application imports
+- Separate groups with blank lines
+- Use absolute imports for local modules
+- Avoid wildcard imports (`from module import *`)
+
+```python
+# ✅ Good
+import sys
+from pathlib import Path
+from typing import Dict, List, Optional
+
+from pydantic import BaseModel
+from loguru import logger
+
+from src.config import Settings
+from src.tools import ToolRegistry
+```
+
+## Docstrings
+- Use Google-style docstrings for all public functions and classes
+- Include type information in docstrings for complex parameters
+- Keep docstrings concise but informative
+
+```python
+def calculate_score(data: List[float], weights: Optional[List[float]] = None) -> float:
+    """Calculate weighted score from input data.
+    
+    Args:
+        data: List of numerical values to process
+        weights: Optional list of weights. If None, equal weights are used.
+        
+    Returns:
+        The calculated weighted score.
+        
+    Raises:
+        ValueError: If data is empty or weights don't match data length.
+    """
+    pass
+```
+
+## Error Handling
+- Use specific exception types, not bare `except:`
+- Include meaningful error messages
+- Use context managers for resource management
+
+```python
+# ✅ Good
+try:
+    result = process_file(file_path)
+except FileNotFoundError:
+    logger.error(f"File not found: {file_path}")
+    raise
+except PermissionError:
+    logger.error(f"Permission denied accessing: {file_path}")
+    raise
+
+# ❌ Bad
+try:
+    result = process_file(file_path)
+except:
+    pass
+```
+
+## Variable Naming
+- Use `snake_case` for variables, functions, and modules
+- Use `PascalCase` for classes
+- Use `UPPER_SNAKE_CASE` for constants
+- Use descriptive names that indicate purpose
+
+## Code Structure
+- Keep functions under 50 lines when possible
+- Use early returns to reduce nesting
+- Prefer list comprehensions over explicit loops for simple transformations
+- Use type guards for complex conditional logic
+
+## Testing
+- Test functions should be descriptive and test one specific behavior
+- Use pytest fixtures for common setup
+- Mock external dependencies
+- Use parametrized tests for multiple input scenarios
+
+```python
+# ✅ Good test structure
+def test_process_data_with_valid_input():
+    """Test data processing with valid input returns expected result."""
+    data = ["item1", "item2"]
+    result = process_data(data)
+    assert len(result) == 2
+    assert result[0]["processed"] is True
+
+@pytest.mark.parametrize("input_data,expected", [
+    ([], []),
+    (["a"], [{"processed": True}]),
+    (["a", "b"], [{"processed": True}, {"processed": True}]),
+])
+def test_process_data_various_inputs(input_data, expected):
+    """Test data processing with various input scenarios."""
+    result = process_data(input_data)
+    assert result == expected
+```
+
+## Configuration and Constants
+- Define constants at module level
+- Use `typing.Final` for constants that shouldn't be modified
+- Group related constants together
+
+```python
+from typing import Final
+
+# Database configuration
+DB_HOST: Final[str] = "localhost"
+DB_PORT: Final[int] = 5432
+DB_NAME: Final[str] = "agentic"
+
+# API endpoints
+API_BASE_URL: Final[str] = "https://api.example.com"
+ENDPOINTS: Final[Dict[str, str]] = {
+    "users": f"{API_BASE_URL}/users",
+    "data": f"{API_BASE_URL}/data",
+}
+```
+
+## Logging
+- Use structured logging with appropriate log levels
+- Include context in log messages
+- Use loguru for consistent logging across the project
+
+```python
+from loguru import logger
+
+def process_user_data(user_id: str, data: Dict[str, Any]) -> bool:
+    """Process user data and return success status."""
+    logger.info(f"Processing data for user {user_id}")
+    
+    try:
+        result = validate_and_process(data)
+        logger.success(f"Successfully processed data for user {user_id}")
+        return True
+    except ValidationError as e:
+        logger.error(f"Validation failed for user {user_id}: {e}")
+        return False
+    except ProcessingError as e:
+        logger.error(f"Processing failed for user {user_id}: {e}")
+        return False
+```
+
+## Performance Considerations
+- Use `pathlib.Path` instead of string paths
+- Prefer `list` comprehensions over `map()` for readability
+- Use `collections.defaultdict` when appropriate
+- Consider using `dataclasses` for simple data containers
+
+## Security
+- Never log sensitive information (passwords, API keys, etc.)
+- Use environment variables for configuration
+- Validate all user inputs
+- Use parameterized queries for database operations
+
+
+## CLI
+- Add all imports at the top of typer commands for the CLI, to avoid expensive imports befor the CLI starts.

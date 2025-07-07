@@ -12,14 +12,13 @@ logger.add(sys.stdout, format="{message}", colorize=True, level="INFO")
 logger.add("logs/agentic.log", level="DEBUG", rotation="10 MB")
 
 PROJECT_ROOT = Path(__file__).parent.parent
-PROMPTS_DIR = PROJECT_ROOT / "prompts"
 
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
 INTERIM_DATA_DIR = DATA_DIR / "interim"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 
-CHROMA_DB_DIR = PROCESSED_DATA_DIR / ".chroma"
+CHROMA_DB_DIR = DATA_DIR / ".chroma"
 
 if not DATA_DIR.exists():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
