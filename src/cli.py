@@ -11,6 +11,28 @@ app = typer.Typer()
 
 
 @app.command()
+def save_job(company_name: str) -> None:
+    """Save a job to the file storage."""
+    from .config import DATA_DIR
+    from .storage.FileStorage import FileStorage
+    from .storage.parse_job import Job
+
+    job = Job(
+        company_name=company_name.strip(),
+        description="Paste job description here...",
+    )
+
+    storage = FileStorage(DATA_DIR)
+    if storage.job_exists(company_name):
+        typer.echo(f"Job {company_name} already exists")
+        replace = typer.confirm("Replace job?")
+        if not replace:
+            return
+    storage.save_job(job)
+    typer.echo(f"Job {company_name} saved")
+
+
+@app.command()
 def chat() -> None:
     """Chat with the agent."""
     logger.debug("Starting chat")
