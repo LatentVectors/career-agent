@@ -41,6 +41,7 @@ where = ["src"]
 [tool.ruff]
 line-length = 99
 src = ["src"]
+extend-exclude = [".venv", "data", "logs", "build", "dist", "__pycache__"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -53,7 +54,8 @@ extend-select = ["I"]
 
 
 [tool.mypy]
-files = ["src/**/*.py"]
+files = ["src/**/*.py", "test/**/*.py"]
+exclude = "(build|dist|\\.venv|data|logs|__pycache__)/"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

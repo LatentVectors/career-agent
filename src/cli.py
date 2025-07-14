@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import typer
-from langchain.schema import HumanMessage
+from langchain_core.runnables.config import RunnableConfig
+
+from src.storage import get_background
 
 from .graph import GRAPH
-from .logging_config import logger
 from .state import State
 
 app = typer.Typer()
@@ -19,7 +20,7 @@ def save_job(company_name: str) -> None:
 
     job = Job(
         company_name=company_name.strip(),
-        description="Paste job description here...",
+        description="",
     )
 
     storage = FileStorage(DATA_DIR)
@@ -33,30 +34,64 @@ def save_job(company_name: str) -> None:
 
 
 @app.command()
+def graph() -> None:
+    """Draw the graph."""
+    print(GRAPH.get_graph().draw_ascii())
+
+
+@app.command()
 def chat() -> None:
     """Chat with the agent."""
-    logger.debug("Starting chat")
-    print(GRAPH.get_graph().draw_ascii())
-    print(f"\n{'=' * 75}\n")
+    from rich.prompt import Prompt
 
-    config = {"configurable": {"thread_id": "1"}}
-    while True:
-        user_input = input("User: ")
-        if user_input.lower() in ["quit", "exit", "q"]:
-            print("Goodbye!")
-            break
-        print("\n")
-        stream_graph_updates(user_input, config)
-        print("\n")
+    from .callbacks import LoggingCallbackHandler
+    from .config import DATA_DIR
+    from .logging_config import logger
+    from .storage.FileStorage import FileStorage
 
+    try:
+        storage = FileStorage(DATA_DIR)
+        jobs = storage.list_jobs()
+        if not jobs:
+            print("No jobs found")
+            return
+        job_name = Prompt.ask("Select a job", choices=[j.strip(".md") for j in jobs])
+        job = storage.get_job(job_name)
+        background = get_background(storage)
 
-def stream_graph_updates(user_input: str, config: dict) -> None:
-    state: State = {"messages": [HumanMessage(content=user_input)]}
-    for event in GRAPH.stream(state, config=config):  # type: ignore[arg-type]
-        for value in event.values():
-            if value is None:
-                continue
-            print("Assistant:", value["messages"][-1].content)
+        print(f"Job: {job_name}")
+        print("Background:")
+        print(f"\tExperience ({len(background['experience'])})")
+        for experience in background["experience"]:
+            print(f"\t\t{experience.title}")
+        print()
+        print(f"\tMotivations and Interests ({len(background['motivations_and_interests'])})")
+        print(f"\tInterview Questions ({len(background['interview_questions'])})")
+        print()
+
+        state: State = {
+            "messages": [],
+            "job": job,
+            "background": background,
+            "experience": [],
+        }
+        config: RunnableConfig = {
+            "configurable": {"thread_id": "1"},
+            "callbacks": [LoggingCallbackHandler()],
+        }
+
+        for event in GRAPH.stream(state, config=config):  # type: ignore[arg-type]
+            for node_name, state_update in event.items():
+                print(f" -> {node_name}")
+                state.update(state_update)
+        print("=" * 75)
+        for summary in state["experience"]:
+            print(f"{summary['source']}:")
+            print(summary["experience"])
+            print("\n\n---\n\n")
+    except Exception as e:
+        logger.error(f"Error chatting: {e}", exc_info=True)
+        raise e
 
 
 if __name__ == "__main__":

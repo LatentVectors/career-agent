@@ -6,6 +6,7 @@
         "**/.mypy_cache": true,
         "**/.git": true,
         ".venv": true,
+        "data/logs": true,
     },
     "python.analysis.exclude": [
         "/data"
