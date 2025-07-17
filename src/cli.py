@@ -6,7 +6,7 @@ from langchain_core.runnables.config import RunnableConfig
 from src.storage import get_background
 
 from .graph import GRAPH
-from .state import State
+from .state import get_main_input_state
 
 app = typer.Typer()
 
@@ -61,7 +61,6 @@ def chat() -> None:
 
         print(f"Job: {job_name}")
         print("Background:")
-        print(f"\tExperience ({len(background['experience'])})")
         for experience in background["experience"]:
             print(f"\t\t{experience.title}")
         print()
@@ -69,26 +68,21 @@ def chat() -> None:
         print(f"\tInterview Questions ({len(background['interview_questions'])})")
         print()
 
-        state: State = {
-            "messages": [],
-            "job": job,
-            "background": background,
-            "experience": [],
-        }
+        input_state = get_main_input_state(job, background)
         config: RunnableConfig = {
             "configurable": {"thread_id": "1"},
             "callbacks": [LoggingCallbackHandler()],
         }
 
-        for event in GRAPH.stream(state, config=config):  # type: ignore[arg-type]
-            for node_name, state_update in event.items():
-                print(f" -> {node_name}")
-                state.update(state_update)
+        for event in GRAPH.stream(input_state, config=config):  # type: ignore[arg-type]
+            print(event)
         print("=" * 75)
-        for summary in state["experience"]:
-            print(f"{summary['source']}:")
-            print(summary["experience"])
-            print("\n\n---\n\n")
+        final_state = GRAPH.get_state(config=config)
+        experience_summary = final_state.values.get("experience_summary")
+        if experience_summary is None:
+            print("No experience summary")
+        else:
+            print(experience_summary)
     except Exception as e:
         logger.error(f"Error chatting: {e}", exc_info=True)
         raise e
