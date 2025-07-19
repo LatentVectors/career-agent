@@ -36,7 +36,18 @@ def save_job(company_name: str) -> None:
 @app.command()
 def graph() -> None:
     """Draw the graph."""
+    from .agents.experience.graph import experience_graph
+
+    print("=" * 75)
+    print("MAIN GRAPH\n")
     print(GRAPH.get_graph().draw_ascii())
+    print("\n" * 2)
+
+    print("=" * 75)
+    print("EXPERIENCE GRAPH\n")
+    print(experience_graph.get_graph().draw_ascii())
+    print("\n" * 2)
+    print("=" * 75)
 
 
 @app.command()
