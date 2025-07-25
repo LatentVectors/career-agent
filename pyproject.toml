@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 
 [project]
-name = "agentic"
+name = "career-agent"
 version = "0.1.0"
-description = "A Python project for agentic systems"
+description = "An AI agent career assistant for job seekers."
 authors = [{ name = "LatentVectors" }]
 
 readme = "README.md"
@@ -70,3 +70,8 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = "test.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
