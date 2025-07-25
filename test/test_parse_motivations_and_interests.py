@@ -21,9 +21,9 @@ def test_parse_motivations_and_interests():
     result = parse_motivations_and_interests(content)
 
     assert len(result) == 2
-    assert result[0].prompt == "What is your favorite color?"
+    assert result[0].question == "What is your favorite color?"
     assert "Blue is my favorite color" in result[0].answer
-    assert result[1].prompt == "What do you enjoy doing?"
+    assert result[1].question == "What do you enjoy doing?"
     assert "I enjoy reading books" in result[1].answer
 
 
@@ -40,8 +40,8 @@ def test_parse_motivations_and_interests_with_empty_sections():
     result = parse_motivations_and_interests(content)
 
     assert len(result) == 2  # Should skip the question without answer
-    assert result[0].prompt == "Question with answer"
-    assert result[1].prompt == "Another question with answer"
+    assert result[0].question == "Question with answer"
+    assert result[1].question == "Another question with answer"
 
 
 def test_parse_motivations_and_interests_with_real_data():
@@ -59,10 +59,10 @@ def test_parse_motivations_and_interests_with_real_data():
     # Check that we have valid questions and answers
     for item in result:
         assert isinstance(item, MotivationAndInterest)
-        assert item.prompt.strip()
+        assert item.question.strip()
         assert item.answer.strip()
         # Questions should not start with '#'
-        assert not item.prompt.startswith("#")
+        assert not item.question.startswith("#")
         # Answers should not start with '-'
         assert not item.answer.startswith("-")
 

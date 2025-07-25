@@ -1,5 +1,5 @@
 import re
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -10,6 +10,7 @@ class Job(BaseModel):
     company_website: Optional[str] = None
     company_email: Optional[str] = None
     company_overview: Optional[str] = None
+    parsed_requirements: Optional[List[str]] = None
     my_interest: Optional[str] = None
     cover_letter: Optional[str] = None
 
@@ -33,6 +34,7 @@ def parse_job(content: str) -> Job:
         "Company Website": "company_website",
         "Company Email": "company_email",
         "Company Overview": "company_overview",
+        "Parsed Requirements": "parsed_requirements",
         "My Interest": "my_interest",
         "Cover Letter": "cover_letter",
     }
@@ -55,10 +57,23 @@ def parse_job(content: str) -> Job:
         header = lines[0].strip()
         content_text = lines[1].strip()
 
+        requirements = []
         # Map header to field name
         if header in field_mappings:
             field_name = field_mappings[header]
-            field_values[field_name] = content_text
+
+            # Special handling for parsed_requirements
+            if field_name == "parsed_requirements":
+                # Extract requirements from lines starting with "-"
+                for line in content_text.split("\n"):
+                    line = line.strip()
+                    if line.startswith("-"):
+                        # Remove the "-" and any leading/trailing whitespace
+                        requirement = line[1:].strip()
+                        if requirement:  # Only add non-empty requirements
+                            requirements.append(requirement)
+            else:
+                field_values[field_name] = content_text
 
     # Validate required fields
     if "company_name" not in field_values or not field_values["company_name"]:
@@ -74,6 +89,7 @@ def parse_job(content: str) -> Job:
         company_website=field_values.get("company_website"),
         company_email=field_values.get("company_email"),
         company_overview=field_values.get("company_overview"),
+        parsed_requirements=requirements,
         my_interest=field_values.get("my_interest"),
         cover_letter=field_values.get("cover_letter"),
     )
@@ -82,10 +98,33 @@ def parse_job(content: str) -> Job:
 def format_job(job: Job) -> str:
     """Format a job to a string."""
     content = ""
-    for field, value in job.model_dump().items():
-        field_name = field.replace("_", " ").title()
-        content += f"# {field_name}\n"
-        if value:
+
+    # Define the order of fields for consistent formatting
+    field_order = [
+        ("company_name", "Company Name"),
+        ("description", "Description"),
+        ("company_website", "Company Website"),
+        ("company_email", "Company Email"),
+        ("company_overview", "Company Overview"),
+        ("parsed_requirements", "Parsed Requirements"),
+        ("my_interest", "My Interest"),
+        ("cover_letter", "Cover Letter"),
+    ]
+
+    for field_name, field_display in field_order:
+        value = getattr(job, field_name)
+
+        content += f"# {field_display}\n"
+
+        if field_name == "parsed_requirements":
+            if value:
+                # Format requirements as bullet points
+                for requirement in value:
+                    content += f"- {requirement}\n"
+            # Always include the section header even if empty
+        elif value:
             content += f"{value}\n"
+
         content += "\n"
+
     return content
