@@ -28,6 +28,8 @@ dependencies = [
     "tqdm>=4.65.0",
     "grandalf>=0.1.0",
     "rich>=13.0.0",
+    "openevals>=0.1.0",
+    "vcrpy>=1.0.0",
 ]
 
 [project.optional-dependencies]

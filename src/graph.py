@@ -4,14 +4,18 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
 
-from .nodes import summarize_experience_node
+from .nodes import get_job_requirements, summarize_experience_node, write_cover_letter
 from .state import MainState
 
 # === NODES ===
 SUMMARIZE_EXPERIENCE_NODE = "summarize_experience"
+GET_JOB_REQUIREMENTS_NODE = "get_job_requirements"
+WRITE_COVER_LETTER_NODE = "write_cover_letter"
 
 builder = StateGraph(MainState)
 builder.add_node(SUMMARIZE_EXPERIENCE_NODE, summarize_experience_node)
+builder.add_node(GET_JOB_REQUIREMENTS_NODE, get_job_requirements)
+builder.add_node(WRITE_COVER_LETTER_NODE, write_cover_letter)
 
 
 # === EDGES ===
@@ -23,14 +27,20 @@ def summarize_experience_edge(state: MainState) -> List[Send]:
             next_nodes.append(
                 Send(
                     SUMMARIZE_EXPERIENCE_NODE,
-                    {"current_experience": exp, "job_description": state["job_description"]},
+                    {
+                        "current_experience": exp.content,
+                        "current_experience_title": exp.title,
+                        "job_requirements": state["job_requirements"],
+                    },
                 )
             )
     return next_nodes
 
 
-builder.add_conditional_edges(START, summarize_experience_edge)  # type: ignore[arg-type]
-builder.add_edge(SUMMARIZE_EXPERIENCE_NODE, END)
+builder.add_edge(START, GET_JOB_REQUIREMENTS_NODE)
+builder.add_conditional_edges(GET_JOB_REQUIREMENTS_NODE, summarize_experience_edge)  # type: ignore[arg-type]
+builder.add_edge(SUMMARIZE_EXPERIENCE_NODE, WRITE_COVER_LETTER_NODE)
+builder.add_edge(WRITE_COVER_LETTER_NODE, END)
 
 
 # === GRAPH ===

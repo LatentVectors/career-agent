@@ -12,6 +12,10 @@ DATA_DIR = PROJECT_ROOT / "data"
 if not DATA_DIR.exists():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
+CASSETTE_DIR = DATA_DIR / "cassettes"
+if not CASSETTE_DIR.exists():
+    CASSETTE_DIR.mkdir(parents=True, exist_ok=True)
+
 
 class Settings(BaseSettings):
     openai_api_key: SecretStr = Field(alias="OPENAI_API_KEY")

@@ -7,7 +7,7 @@ from src.storage.parse_job import Job, format_job, parse_job
 class TestParseJob:
     """Test cases for parse_job function."""
 
-    def test_parse_job_with_all_fields(self):
+    def test_parse_job_with_all_fields(self) -> None:
         """Test parsing a job with all fields populated."""
         content = """# Company Name
 TechCorp Inc.
@@ -55,7 +55,7 @@ I am writing to express my interest in the software engineer position..."""
             == "Dear Hiring Manager,\n\nI am writing to express my interest in the software engineer position..."
         )
 
-    def test_parse_job_with_required_fields_only(self):
+    def test_parse_job_with_required_fields_only(self) -> None:
         """Test parsing a job with only required fields (company_name and description)."""
         content = """# Company Name
 StartupXYZ
@@ -71,10 +71,11 @@ Join our fast-growing startup as a developer."""
         assert result.company_website is None
         assert result.company_email is None
         assert result.company_overview is None
+        assert result.parsed_requirements is None
         assert result.my_interest is None
         assert result.cover_letter is None
 
-    def test_parse_job_with_missing_company_name(self):
+    def test_parse_job_with_missing_company_name(self) -> None:
         """Test parsing a job with missing company name raises ValueError."""
         content = """# Description
 We are looking for a developer.
@@ -85,7 +86,7 @@ https://example.com"""
         with pytest.raises(ValueError, match="Company name is required but not found in content"):
             parse_job(content)
 
-    def test_parse_job_with_missing_description(self):
+    def test_parse_job_with_missing_description(self) -> None:
         """Test parsing a job with missing description raises ValueError."""
         content = """# Company Name
 Example Corp
@@ -96,7 +97,7 @@ https://example.com"""
         with pytest.raises(ValueError, match="Description is required but not found in content"):
             parse_job(content)
 
-    def test_parse_job_with_empty_company_name(self):
+    def test_parse_job_with_empty_company_name(self) -> None:
         """Test parsing a job with empty company name raises ValueError."""
         content = """# Company Name
 
@@ -106,7 +107,7 @@ We are looking for a developer."""
         with pytest.raises(ValueError, match="Company name is required but not found in content"):
             parse_job(content)
 
-    def test_parse_job_with_empty_description(self):
+    def test_parse_job_with_empty_description(self) -> None:
         """Test parsing a job with empty description raises ValueError."""
         content = """# Company Name
 Example Corp
@@ -116,7 +117,7 @@ Example Corp
         with pytest.raises(ValueError, match="Description is required but not found in content"):
             parse_job(content)
 
-    def test_parse_job_with_multiline_content(self):
+    def test_parse_job_with_multiline_content(self) -> None:
         """Test parsing a job with multiline content in fields."""
         content = """# Company Name
 Multi-line Company
@@ -144,7 +145,7 @@ with multiple lines"""
             == "This is a multi-line\ncompany overview\nwith multiple lines"
         )
 
-    def test_parse_job_with_whitespace_variations(self):
+    def test_parse_job_with_whitespace_variations(self) -> None:
         """Test parsing a job with various whitespace patterns."""
         content = """# Company Name
    TechCorp Inc.   
@@ -157,7 +158,7 @@ with multiple lines"""
         assert result.company_name == "TechCorp Inc."
         assert result.description == "We are looking for a developer."
 
-    def test_parse_job_with_special_characters(self):
+    def test_parse_job_with_special_characters(self) -> None:
         """Test parsing a job with special characters in field content."""
         content = """# Company Name
 TechCorp & Associates
@@ -181,7 +182,7 @@ I'm excited about the opportunity to work with cutting-edge technologies!"""
             == "I'm excited about the opportunity to work with cutting-edge technologies!"
         )
 
-    def test_parse_job_with_unknown_headers(self):
+    def test_parse_job_with_unknown_headers(self) -> None:
         """Test parsing a job with unknown headers (should be ignored)."""
         content = """# Company Name
 TechCorp
@@ -201,7 +202,7 @@ This too should be ignored"""
         assert result.description == "We are hiring."
         # Unknown headers should not affect the result
 
-    def test_parse_job_with_empty_sections(self):
+    def test_parse_job_with_empty_sections(self) -> None:
         """Test parsing a job with empty sections."""
         content = """# Company Name
 TechCorp
@@ -224,7 +225,94 @@ We are hiring.
         assert result.company_email is None
         assert result.company_overview is None
 
-    def test_parse_job_with_real_data_file(self):
+    def test_parse_job_with_parsed_requirements(self) -> None:
+        """Test parsing a job with parsed requirements field."""
+        content = """# Company Name
+TechCorp
+
+# Description
+We are looking for a software engineer.
+
+# Parsed Requirements
+- 5+ years of Python experience
+- Experience with Django or Flask
+- Knowledge of AWS or GCP
+- Strong problem-solving skills
+- Experience with CI/CD pipelines"""
+
+        result = parse_job(content)
+
+        assert result.company_name == "TechCorp"
+        assert result.description == "We are looking for a software engineer."
+        assert result.parsed_requirements == [
+            "5+ years of Python experience",
+            "Experience with Django or Flask",
+            "Knowledge of AWS or GCP",
+            "Strong problem-solving skills",
+            "Experience with CI/CD pipelines",
+        ]
+
+    def test_parse_job_with_parsed_requirements_and_whitespace(self) -> None:
+        """Test parsing parsed requirements with various whitespace patterns."""
+        content = """# Company Name
+TechCorp
+
+# Description
+We are hiring.
+
+# Parsed Requirements
+-   Python experience   
+-  JavaScript knowledge
+-   AWS experience   """
+
+        result = parse_job(content)
+
+        assert result.parsed_requirements == [
+            "Python experience",
+            "JavaScript knowledge",
+            "AWS experience",
+        ]
+
+    def test_parse_job_with_empty_parsed_requirements(self) -> None:
+        """Test parsing a job with empty parsed requirements section."""
+        content = """# Company Name
+TechCorp
+
+# Description
+We are hiring.
+
+# Parsed Requirements"""
+
+        result = parse_job(content)
+
+        assert result.company_name == "TechCorp"
+        assert result.description == "We are hiring."
+        assert result.parsed_requirements is None
+
+    def test_parse_job_with_mixed_parsed_requirements_content(self) -> None:
+        """Test parsing parsed requirements with mixed content (some lines with bullets, some without)."""
+        content = """# Company Name
+TechCorp
+
+# Description
+We are hiring.
+
+# Parsed Requirements
+- Python experience
+Some non-bullet content
+- JavaScript knowledge
+Another non-bullet line
+- AWS experience"""
+
+        result = parse_job(content)
+
+        assert result.parsed_requirements == [
+            "Python experience",
+            "JavaScript knowledge",
+            "AWS experience",
+        ]
+
+    def test_parse_job_with_real_data_file(self) -> None:
         """Test parsing a job from an actual data file if it exists."""
         file_path = Path("data/job.md")
         if not file_path.exists():
@@ -245,7 +333,7 @@ We are hiring.
 class TestFormatJob:
     """Test cases for format_job function."""
 
-    def test_format_job_with_all_fields(self):
+    def test_format_job_with_all_fields(self) -> None:
         """Test formatting a job with all fields populated."""
         job = Job(
             company_name="TechCorp Inc.",
@@ -253,6 +341,7 @@ class TestFormatJob:
             company_website="https://techcorp.com",
             company_email="careers@techcorp.com",
             company_overview="TechCorp is a leading technology company.",
+            parsed_requirements=["Python experience", "JavaScript knowledge"],
             my_interest="I'm excited about this opportunity.",
             cover_letter="Dear Hiring Manager,\n\nI am writing to express my interest...",
         )
@@ -270,12 +359,15 @@ class TestFormatJob:
         assert "careers@techcorp.com" in result
         assert "# Company Overview" in result
         assert "TechCorp is a leading technology company." in result
+        assert "# Parsed Requirements" in result
+        assert "Python experience" in result
+        assert "JavaScript knowledge" in result
         assert "# My Interest" in result
         assert "I'm excited about this opportunity." in result
         assert "# Cover Letter" in result
         assert "Dear Hiring Manager" in result
 
-    def test_format_job_with_required_fields_only(self):
+    def test_format_job_with_required_fields_only(self) -> None:
         """Test formatting a job with only required fields."""
         job = Job(company_name="StartupXYZ", description="Join our fast-growing startup.")
 
@@ -291,7 +383,7 @@ class TestFormatJob:
         assert "https://" not in result
         assert "careers@" not in result
 
-    def test_format_job_with_empty_optional_fields(self):
+    def test_format_job_with_empty_optional_fields(self) -> None:
         """Test formatting a job with empty optional fields."""
         job = Job(
             company_name="TechCorp",
@@ -299,6 +391,7 @@ class TestFormatJob:
             company_website="",
             company_email="",
             company_overview="",
+            parsed_requirements=[],
             my_interest="",
             cover_letter="",
         )
@@ -311,6 +404,7 @@ class TestFormatJob:
         assert "# Company Website" in result
         assert "# Company Email" in result
         assert "# Company Overview" in result
+        assert "# Parsed Requirements" in result
         assert "# My Interest" in result
         assert "# Cover Letter" in result
 
@@ -318,7 +412,7 @@ class TestFormatJob:
         assert "TechCorp" in result
         assert "We are hiring." in result
 
-    def test_format_job_roundtrip(self):
+    def test_format_job_roundtrip(self) -> None:
         """Test that format_job and parse_job work together correctly."""
         original_content = """# Company Name
 TechCorp Inc.
@@ -330,7 +424,11 @@ We are looking for a talented software engineer.
 https://techcorp.com
 
 # Company Overview
-TechCorp is a leading technology company."""
+TechCorp is a leading technology company.
+
+# Parsed Requirements
+- Python experience
+- JavaScript knowledge"""
 
         # Parse the original content
         job = parse_job(original_content)
@@ -346,14 +444,16 @@ TechCorp is a leading technology company."""
         assert job.description == job_roundtrip.description
         assert job.company_website == job_roundtrip.company_website
         assert job.company_overview == job_roundtrip.company_overview
+        assert job.parsed_requirements == job_roundtrip.parsed_requirements
 
-    def test_format_job_field_ordering(self):
+    def test_format_job_field_ordering(self) -> None:
         """Test that format_job maintains consistent field ordering."""
         job = Job(
             company_name="TechCorp",
             description="We are hiring.",
             company_website="https://techcorp.com",
             company_email="careers@techcorp.com",
+            parsed_requirements=["Python experience"],
         )
 
         result = format_job(job)
@@ -368,18 +468,20 @@ TechCorp is a leading technology company."""
             "# Company Website",
             "# Company Email",
             "# Company Overview",
+            "# Parsed Requirements",
             "# My Interest",
             "# Cover Letter",
         ]
 
         assert field_headers == expected_order
 
-    def test_format_job_with_special_characters(self):
+    def test_format_job_with_special_characters(self) -> None:
         """Test formatting a job with special characters."""
         job = Job(
             company_name="TechCorp & Associates",
             description="We're looking for developers with 5+ years experience.",
             company_overview="We focus on AI/ML, cloud computing, and DevOps.",
+            parsed_requirements=["Python & JavaScript", "AWS/GCP experience"],
             my_interest="I'm excited about the opportunity!",
         )
 
@@ -389,4 +491,26 @@ TechCorp is a leading technology company."""
         assert "TechCorp & Associates" in result
         assert "We're looking for developers with 5+ years experience." in result
         assert "We focus on AI/ML, cloud computing, and DevOps." in result
+        assert "Python & JavaScript" in result
+        assert "AWS/GCP experience" in result
         assert "I'm excited about the opportunity!" in result
+
+    def test_format_job_with_parsed_requirements_only(self) -> None:
+        """Test formatting a job with only parsed requirements as optional field."""
+        job = Job(
+            company_name="TechCorp",
+            description="We are hiring.",
+            parsed_requirements=["Python experience", "JavaScript knowledge", "AWS experience"],
+        )
+
+        result = format_job(job)
+
+        # Check that parsed requirements are formatted correctly
+        assert "# Parsed Requirements" in result
+        assert "Python experience" in result
+        assert "JavaScript knowledge" in result
+        assert "AWS experience" in result
+
+        # Check that other optional fields are not present
+        assert "https://" not in result
+        assert "careers@" not in result

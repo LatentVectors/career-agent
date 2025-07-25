@@ -2,3 +2,4 @@ __notes__/
 logs/
 *.log
 */agentic.egg-info/
+data/

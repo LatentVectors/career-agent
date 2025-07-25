@@ -1,4 +1,6 @@
-from typing import Annotated, List, Optional, TypedDict
+from __future__ import annotations
+
+from typing import Annotated, Dict, List, Optional, TypedDict
 
 from .storage.get_background import Background, Experience
 from .storage.parse_interview_questions import InterviewQuestion
@@ -6,30 +8,19 @@ from .storage.parse_job import Job
 from .storage.parse_motivations_and_interests import MotivationAndInterest
 
 
-def experience_reducer(a: str, b: str) -> str:
+def experience_reducer(a: Optional[dict], b: Optional[dict]) -> dict:
     """Reduce experience summaries."""
-    if b is None or b.strip() == "":
-        return a
-    if a is None or a.strip() == "":
-        return b
-    if b in a:
-        return a
-    return f"{a}\n\n---\n\n{b}"
+    if a is None:
+        a = {}
+    if b is not None:
+        a.update(b)
+    return a
 
 
 class MainInputState(TypedDict):
     """Main input state."""
 
-    # Job
-    company_name: str
     job_description: str
-    company_website: Optional[str]
-    company_email: Optional[str]
-    company_overview: Optional[str]
-    my_interest: Optional[str]
-    cover_letter: Optional[str]
-
-    # Background
     experience: List[Experience]
     motivations_and_interests: List[MotivationAndInterest]
     interview_questions: List[InterviewQuestion]
@@ -38,50 +29,65 @@ class MainInputState(TypedDict):
 class MainOutputState(TypedDict):
     """Main output state."""
 
-    experience_summary: Optional[str]
+    cover_letter: Optional[str]
+    """The cover letter."""
+
+    resume: Optional[str]
+    """The resume."""
+
+    linkedin_message: Optional[str]
+    """The LinkedIn message."""
+
+    hr_manager_message: Optional[str]
+    """The HR manager message."""
+
+    hiring_manager_message: Optional[str]
+    """The hiring manager message."""
 
 
-class MainState(TypedDict):
+class MainState(TypedDict, MainInputState, MainOutputState):
     """State."""
 
-    # Job
-    company_name: str
-    job_description: str
-    company_website: Optional[str]
-    company_email: Optional[str]
-    company_overview: Optional[str]
-    my_interest: Optional[str]
-    cover_letter: Optional[str]
+    current_experience_title: Optional[str]
+    """The title of the current experience."""
 
-    # Background
-    experience: List[Experience]
-    motivations_and_interests: List[MotivationAndInterest]
-    interview_questions: List[InterviewQuestion]
+    current_experience: Optional[str]
+    """The current experience."""
 
-    # Experience Summary
-    current_experience: Optional[Experience]
-    experience_summary: Annotated[Optional[str], experience_reducer]
+    job_requirements: Optional[Dict[int, str]]
+    """Extracted job requirements."""
+
+    summarized_experience: Annotated[Optional[Dict[str, List[Summary]]], experience_reducer]
+    """Summarized experience. The key is the title of the experience."""
+
+
+class Summary(TypedDict):
+    """Summary of the experience."""
+
+    requirements: List[int]
+    """The requirements that the summary covers."""
+
+    summary: str
+    """The summary of the experience."""
 
 
 class PartialMainState(TypedDict, total=False):
     """Partial state for return types."""
 
-    # Job
-    company_name: str
     job_description: str
-    company_website: Optional[str]
-    company_email: Optional[str]
-    company_overview: Optional[str]
-    my_interest: Optional[str]
-    cover_letter: Optional[str]
-
-    # Background
     experience: List[Experience]
     motivations_and_interests: List[MotivationAndInterest]
     interview_questions: List[InterviewQuestion]
-
-    # Experience Summary
     experience_summary: Optional[str]
+    current_experience: Optional[str]
+    current_experience_title: Optional[str]
+    job_requirements: Optional[Dict[int, str]]
+    cover_letter: Optional[str]
+    resume: Optional[str]
+    linkedin_message: Optional[str]
+    hr_manager_message: Optional[str]
+    hiring_manager_message: Optional[str]
+    summarized_experience: Optional[Dict[str, List[Summary]]]
 
 
 def get_main_input_state(
@@ -90,13 +96,7 @@ def get_main_input_state(
 ) -> MainInputState:
     """Get the state."""
     return MainInputState(
-        company_name=job.company_name,
         job_description=job.description,
-        company_website=job.company_website,
-        company_email=job.company_email,
-        company_overview=job.company_overview,
-        my_interest=job.my_interest,
-        cover_letter=job.cover_letter,
         motivations_and_interests=background["motivations_and_interests"],
         interview_questions=background["interview_questions"],
         experience=background["experience"],

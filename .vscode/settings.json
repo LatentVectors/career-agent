@@ -5,8 +5,20 @@
         "**/.ruff_cache": true,
         "**/.mypy_cache": true,
         "**/.git": true,
-        ".venv": true,
-        "data/logs": true,
+        "**/.venv": true,
+        "**/data/logs": true,
+        "**/agentic.egg-info": true,
+        "build/": true,
+    },
+    "search.exclude": {
+        "**/.venv": true,
+        "**/data": true,
+        "**/logs": true,
+    },
+    "files.watcherExclude": {
+        "**/.venv": true,
+        "**/data": true,
+        "**/logs": true,
     },
     "python.analysis.exclude": [
         "/data"

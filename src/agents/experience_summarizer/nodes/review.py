@@ -2,7 +2,7 @@ from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 from src.logging_config import logger
-from src.models import llm_with_retry
+from src.models import OpenAIModels, get_model
 
 from ..state import ExperienceState, PartialExperienceState
 
@@ -65,8 +65,5 @@ You are a meticulous fact-checker. Your sole purpose is to review the provided *
 {summary}
 """
 
-chain = (
-    ChatPromptTemplate.from_messages([("system", review_prompt)])
-    | llm_with_retry
-    | StrOutputParser()
-)
+llm = get_model(OpenAIModels.gpt_4o_mini)
+chain = ChatPromptTemplate.from_messages([("system", review_prompt)]) | llm | StrOutputParser()

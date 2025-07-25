@@ -36,7 +36,7 @@ def save_job(company_name: str) -> None:
 @app.command()
 def graph() -> None:
     """Draw the graph."""
-    from .agents.experience.graph import experience_graph
+    from .agents.experience_summarizer.graph import experience_graph
 
     print("=" * 75)
     print("MAIN GRAPH\n")
@@ -51,14 +51,21 @@ def graph() -> None:
 
 
 @app.command()
-def chat() -> None:
+def chat(replay: bool = typer.Option(False, "--replay", help="Replay recorded requests.")) -> None:
     """Chat with the agent."""
     from rich.prompt import Prompt
+    from vcr import VCR  # type: ignore
 
     from .callbacks import LoggingCallbackHandler
-    from .config import DATA_DIR
+    from .config import CASSETTE_DIR, DATA_DIR
     from .logging_config import logger
     from .storage.FileStorage import FileStorage
+
+    vcr = VCR(
+        cassette_library_dir=str(CASSETTE_DIR),
+        match_on=("method", "uri", "body", "query"),
+        record_mode="new_episodes" if replay else "all",
+    )
 
     try:
         storage = FileStorage(DATA_DIR)
@@ -85,15 +92,12 @@ def chat() -> None:
             "callbacks": [LoggingCallbackHandler()],
         }
 
-        for event in GRAPH.stream(input_state, config=config):  # type: ignore[arg-type]
-            print(event)
-        print("=" * 75)
-        final_state = GRAPH.get_state(config=config)
-        experience_summary = final_state.values.get("experience_summary")
-        if experience_summary is None:
-            print("No experience summary")
-        else:
-            print(experience_summary)
+        with vcr.use_cassette("chat.yaml"):
+            for event in GRAPH.stream(input_state, config=config):  # type: ignore[arg-type]
+                print(event)
+            print("=" * 75)
+            final_state = GRAPH.get_state(config=config)
+            print(final_state.values)
     except Exception as e:
         logger.error(f"Error chatting: {e}", exc_info=True)
         raise e
