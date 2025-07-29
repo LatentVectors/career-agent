@@ -7,7 +7,7 @@
         "**/.git": true,
         "**/.venv": true,
         "**/data/logs": true,
-        "**/agentic.egg-info": true,
+        "**/*.egg-info": true,
         "build/": true,
     },
     "search.exclude": {
