@@ -45,7 +45,11 @@ def summarize_experience_edge(state: MainState) -> List[Send]:
 
 
 builder.add_edge(START, GET_JOB_REQUIREMENTS_NODE)
-builder.add_conditional_edges(GET_JOB_REQUIREMENTS_NODE, summarize_experience_edge)  # type: ignore[arg-type]
+builder.add_conditional_edges(
+    GET_JOB_REQUIREMENTS_NODE,
+    summarize_experience_edge,  # type: ignore[arg-type]
+    [WRAPPED_EXPERIENCE_AGENT_NODE],
+)
 builder.add_edge(GET_JOB_REQUIREMENTS_NODE, WRAPPED_RESPONSES_AGENT_NODE)
 builder.add_edge(WRAPPED_EXPERIENCE_AGENT_NODE, WRITE_COVER_LETTER_NODE)
 builder.add_edge(WRAPPED_RESPONSES_AGENT_NODE, WRITE_COVER_LETTER_NODE)
