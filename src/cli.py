@@ -36,7 +36,7 @@ def save_job(company_name: str) -> None:
 @app.command()
 def graph() -> None:
     """Draw the graph."""
-    from .agents.experience_summarizer.graph import experience_graph
+    from .agents.experience_summarizer.graph import experience_agent
 
     print("=" * 75)
     print("MAIN GRAPH\n")
@@ -45,7 +45,7 @@ def graph() -> None:
 
     print("=" * 75)
     print("EXPERIENCE GRAPH\n")
-    print(experience_graph.get_graph().draw_ascii())
+    print(experience_agent.get_graph().draw_ascii())
     print("\n" * 2)
     print("=" * 75)
 
@@ -53,6 +53,7 @@ def graph() -> None:
 @app.command()
 def chat(replay: bool = typer.Option(False, "--replay", help="Replay recorded requests.")) -> None:
     """Chat with the agent."""
+
     from rich.prompt import Prompt
     from vcr import VCR  # type: ignore
 
@@ -60,6 +61,7 @@ def chat(replay: bool = typer.Option(False, "--replay", help="Replay recorded re
     from .config import CASSETTE_DIR, DATA_DIR
     from .logging_config import logger
     from .storage.FileStorage import FileStorage
+    from .utils import serialize_state
 
     vcr = VCR(
         cassette_library_dir=str(CASSETTE_DIR),
@@ -93,11 +95,20 @@ def chat(replay: bool = typer.Option(False, "--replay", help="Replay recorded re
         }
 
         with vcr.use_cassette("chat.yaml"):
+            print("\n\n=== GRAPH EVENTS ===\n")
             for event in GRAPH.stream(input_state, config=config):  # type: ignore[arg-type]
-                print(event)
-            print("=" * 75)
+                for key in event.keys():
+                    print(f"EVENT: {key}")
+
             final_state = GRAPH.get_state(config=config)
-            print(final_state.values)
+            output_path = DATA_DIR / "state.json"
+            with open(output_path, "w") as f:
+                f.write(serialize_state(final_state.values))
+
+            cover_letter = final_state.values.get("cover_letter")
+            if cover_letter:
+                print("\n\n=== COVER LETTER ===\n")
+                print(cover_letter, end="\n\n")
     except Exception as e:
         logger.error(f"Error chatting: {e}", exc_info=True)
         raise e

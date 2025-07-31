@@ -1,13 +1,16 @@
+from src.logging_config import logger
+
 from ..agents.experience_summarizer import (
     ExperienceInputState,
     ExperienceOutputState,
-    experience_graph,
+    experience_agent,
 )
 from ..state import MainState, PartialMainState
 
 
-def summarize_experience_node(state: MainState) -> PartialMainState:
+def wrapped_experience_agent(state: MainState) -> PartialMainState:
     """Summarize experience."""
+    logger.info("NODE: wrapped_experience_agent")
     title = state["current_experience_title"]
     if title is None:
         raise ValueError("Current experience title is required")
@@ -21,7 +24,7 @@ def summarize_experience_node(state: MainState) -> PartialMainState:
         "experience": experience,
         "job_requirements": job_requirements,
     }
-    result: ExperienceOutputState = experience_graph.invoke(input_state)  # type: ignore
+    result: ExperienceOutputState = experience_agent.invoke(input_state)  # type: ignore
     summaries = result["summary"]
     if summaries is None:
         return {"summarized_experience": {title: []}}

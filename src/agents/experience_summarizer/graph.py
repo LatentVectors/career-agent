@@ -14,4 +14,4 @@ builder.add_node(SUMMARIZE, summarize)
 builder.add_edge(START, SUMMARIZE)
 builder.add_edge(SUMMARIZE, END)
 
-experience_graph = builder.compile()
+experience_agent = builder.compile()

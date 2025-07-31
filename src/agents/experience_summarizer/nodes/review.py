@@ -9,7 +9,7 @@ from ..state import ExperienceState, PartialExperienceState
 
 def review(state: ExperienceState) -> PartialExperienceState:
     """Review the work experience."""
-    logger.info("Reviewing Experience")
+    logger.info("NODE: experience_summarizer.review")
     try:
         response = chain.invoke(
             {
@@ -18,7 +18,6 @@ def review(state: ExperienceState) -> PartialExperienceState:
                 "summary": state["summary"],
             }
         )
-        logger.debug(f"Response: {response[:100]}...")
         if response.strip() == "--EMPTY--":
             return {"summary": None}
         elif response.strip() == "--NO CHANGE--":

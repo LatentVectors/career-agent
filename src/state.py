@@ -8,8 +8,8 @@ from .storage.parse_job import Job
 from .storage.parse_motivations_and_interests import MotivationAndInterest
 
 
-def experience_reducer(a: Optional[dict], b: Optional[dict]) -> dict:
-    """Reduce experience summaries."""
+def dict_reducer(a: Optional[dict], b: Optional[dict]) -> dict:
+    """Reduce a dictionary using keys to merge the values."""
     if a is None:
         a = {}
     if b is not None:
@@ -57,8 +57,11 @@ class MainState(TypedDict, MainInputState, MainOutputState):
     job_requirements: Optional[Dict[int, str]]
     """Extracted job requirements."""
 
-    summarized_experience: Annotated[Optional[Dict[str, List[Summary]]], experience_reducer]
+    summarized_experience: Annotated[Optional[Dict[str, List[Summary]]], dict_reducer]
     """Summarized experience. The key is the title of the experience."""
+
+    summarized_responses: Annotated[Optional[Dict[str, List[Summary]]], dict_reducer]
+    """Summarized responses. The key is the source of the responses."""
 
 
 class Summary(TypedDict):
@@ -88,6 +91,7 @@ class PartialMainState(TypedDict, total=False):
     hr_manager_message: Optional[str]
     hiring_manager_message: Optional[str]
     summarized_experience: Optional[Dict[str, List[Summary]]]
+    summarized_responses: Optional[Dict[str, List[Summary]]]
 
 
 def get_main_input_state(

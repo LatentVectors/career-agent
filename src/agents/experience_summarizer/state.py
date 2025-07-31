@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from typing import Dict, List, Optional, TypedDict
+from typing import List, Optional, TypedDict
+
+from src.types import JobRequirements
 
 
 class ExperienceInputState(TypedDict):
     """The input state for the experience agent."""
 
-    job_requirements: Optional[Dict[int, str]]
+    job_requirements: Optional[JobRequirements]
     """The requirements for the job."""
 
     experience: str
@@ -36,7 +38,7 @@ class ExperienceState(TypedDict):
     job_description: str
     """The target job description."""
 
-    job_requirements: Optional[Dict[int, str]]
+    job_requirements: Optional[JobRequirements]
     """The requirements for the job."""
 
     experience: str
@@ -54,7 +56,7 @@ class PartialExperienceState(TypedDict, total=False):
     """The partial state for the experience agent."""
 
     job_description: str
-    job_requirements: Optional[Dict[int, str]]
+    job_requirements: Optional[JobRequirements]
     experience: str
     matches: Optional[str]
     summary: Optional[List[ExperienceSummary]]

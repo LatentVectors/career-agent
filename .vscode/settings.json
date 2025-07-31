@@ -34,6 +34,11 @@
             "source.organizeImports": "explicit"
         }
     },
+    "[json]": {
+        "editor.wordWrap": "wordWrapColumn",
+        "editor.wordWrapColumn": 130,
+        "editor.wrappingIndent": "indent",
+    },
     "ruff.nativeServer": "on",
     "python.testing.pytestArgs": [
         "test"

@@ -1,6 +1,18 @@
-from typing import List
+from typing import Dict, List
 
 from pydantic import BaseModel
+
+JobRequirements = Dict[int, str]
+
+
+class CandidateResponse(BaseModel):
+    """A response from a candidate."""
+
+    prompt: str
+    """The prompt provided to the candidate."""
+
+    response: str
+    """The response from the candidate."""
 
 
 class RequirementSummary(BaseModel):
