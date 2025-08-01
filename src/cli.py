@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import tempfile
+
 import typer
 from langchain_core.runnables.config import RunnableConfig
 
@@ -34,20 +37,38 @@ def save_job(company_name: str) -> None:
 
 
 @app.command()
-def graph() -> None:
+def graph(
+    png: bool = typer.Option(False, "--png", help="Draw the graph as a PNG."),
+) -> None:
     """Draw the graph."""
-    from .agents.experience_summarizer.graph import experience_agent
 
     print("=" * 75)
     print("MAIN GRAPH\n")
     print(GRAPH.get_graph().draw_ascii())
     print("\n" * 2)
 
-    print("=" * 75)
-    print("EXPERIENCE GRAPH\n")
-    print(experience_agent.get_graph().draw_ascii())
-    print("\n" * 2)
-    print("=" * 75)
+    if not png:
+        return
+
+    from PIL import Image
+
+    img = GRAPH.get_graph().draw_mermaid_png()
+
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
+        temp_file.write(img)
+        temp_file_path = temp_file.name
+
+    try:
+        image = Image.open(temp_file_path)
+        image.show()
+        typer.echo("Graph displayed in popup window")
+    except Exception as e:
+        typer.echo(f"Error displaying graph: {e}")
+    finally:
+        try:
+            os.unlink(temp_file_path)
+        except OSError:
+            pass
 
 
 @app.command()
