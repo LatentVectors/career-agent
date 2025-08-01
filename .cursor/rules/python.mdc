@@ -1,8 +1,8 @@
 ---
-description: 
-globs: 
-alwaysApply: true
+globs: **/*.py
+alwaysApply: false
 ---
+
 # Python Coding Standards
 
 ## Type Annotations

@@ -1,0 +1,21 @@
+---
+globs: src/**/graph.py
+alwaysApply: false
+---
+
+- The `graph.py` is responsible for defining the structure and flow of agentic graphs.
+- It should include the following elements:
+    - A StrEnum `Node` with the node names.
+    - The graph definition attaching nodes and edges to the graph.
+    - Specialized edges, such as conditional routes and map edges for the map-reduce pattern.
+    - The compiled graph.
+    - A function(s) defining the agent execution/runtime loop.
+
+- If the `graph.py` file become too complex or cluttered it can be converted into a module that exports the compiled graph, the `Node` enum, and the function(s) defining the agent execution/runtime loop.
+
+- Specialized edges, like conditional routes, map-reduce edges, and others should be defined within the 'graph.py' or 'graph' module.
+    - For simpler graphs, everything should live in a single graph.py file. However, if the graph becomes too large or complex for a single file, the graph.py file should become a module and specialized edges can be moved to their own file(s).
+    - Specialized edges should include a prefix that identifies their main function ie `route_`, `map_`, etc..
+    - All edge functions should have the postfix `_edge`.
+    - The full name for edge function should be `{type_prefix}_{edge_name}_edge`.
+    - The `{edge_name}` should clearly identify what the edge does and/or the nodes involved. It should also be clear and concise.

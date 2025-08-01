@@ -1,0 +1,76 @@
+---
+description: An overview of the projects purpose and structure. Use this to identify the correct location for code when looking things up or adding new code outside of the current file.
+alwaysApply: false
+---
+# Project Overview
+This project defines a helpful AI agent for generating career-related documents for a job seeker.
+
+# Project Structure
+
+Below is a high-level map of the repository and the intended purpose of every major directory / module.  When adding new code please follow these conventions so that future contributors can navigate the project predictably.
+
+## Top-level directories
+
+| Path | Purpose |
+|------|---------|
+| `src/` | Core application library – contains the main agent, supporting utilities, and reusable sub-agents.  **All importable Python code lives here.** |
+| `data/` | User-specific content (raw job descriptions, background files, VCR cassettes, etc.).  Kept out of version control. |
+| `evals/` | Offline evaluation harness built on LangGraph.  Contains datasets and experiment definitions. |
+| `test/` | Pytest suite covering parsing logic, storage helpers, and critical nodes. |
+
+---
+
+## Main agent – `src/`
+The main agent is responsible for orchestrating the full "help me get a job" workflow.  Its layout is intentionally flat so that each concern has a single obvious home:
+
+* `graph.py` – Builds the LangGraph `StateGraph` that wires every node together, defines edge-routing helpers, and exposes `GRAPH` / `stream_agent` for external callers.
+* `state.py` – TypedDict schemas for the main agent's input, output, and internal working state.  Also provides helpers for constructing the initial state from persisted objects.
+* `nodes/` – **Stateless building blocks** that the graph calls.  Each file should implement **one** node.  Examples:
+  * `job_requirements.py` – extracts numbered requirements from the job description.
+  * `wrapped_experience_agent.py` / `wrapped_responses_agent.py` – thin adapters that call the respective sub-agents and merge their output back into `MainState`.
+  * `write_cover_letter.py` – composes the final cover letter from accumulated summaries.
+  * `get_feedback.py` – human-in-the-loop node that routes back into the graph when revisions are requested.
+  * `tool_node.py`, `chatbot.py`, etc. – generic or utility nodes.
+  New nodes should live here and be imported/re-exported in `nodes/__init__.py` for easy wildcard import.
+* `storage/` – Reading / writing data on disk.  Golden rule: **no business logic** – only serialization, parsing, or simple transforms.
+  * `FileStorage.py` – Generic JSON file persistence.
+  * `parse_job.py`, `parse_interview_questions.py`, `parse_motivations_and_interests.py`, `get_background.py` – translate raw files into typed domain objects.
+* `models.py` – Central place to list LLM model names and a `get_model()` helper so that switching models only requires editing one file.
+* `cli.py` – Typer entry-points (`graph`, `chat`, `save_job`, etc.).  Anything runnable from the command line belongs here, **not** in random scripts.
+* `config.py` – Static configuration (data paths, environment toggles).
+* `logging_config.py` – Initializes the project-wide logger; imported early by every module that needs logging.
+* `callbacks.py` – Custom LangChain callback handlers (e.g. retry logging).
+* `hitl.py` – Dispatch and handlers for human-in-the-loop (HITL) interactions.
+* `tools.py` – External tool wrappers that nodes can call (e.g. web search, shell commands).
+* `utils.py` – Misc. helpers that don't fit elsewhere (state serialization, small pure functions).  Keep this file short; promote code to a dedicated module when it grows.
+
+---
+
+## Sub-agents – `src/agents/{agent_name}`
+Sub-agents are **self-contained LangGraph graphs** that solve a single sub-task (e.g. summarizing experience or responses).  They follow the exact same mini-structure so they can be plugged into the main agent or used standalone:
+
+```
+src/agents/my_agent/
+├── __init__.py          # Re-exports graph for `from ... import my_agent`
+├── graph.py             # Builds/compiles the StateGraph and exposes `graph` or `my_agent`
+├── state.py             # TypedDict schemas for the sub-agent state
+└── nodes/
+    ├── __init__.py      # Imports the node functions for graph.py
+    ├── step_one.py      # One node per file (stateless, pure)
+    └── step_two.py
+```
+
+The `nodes/__init__.py` file should export all of the nodes in the directory as part of `__all__`.
+
+The sub-agents `__init__.py` file should export the compiled agent graph and the public API via the Input and Output states from the `states.py` file.
+
+When adding a new sub-agent, follow these rules:
+* Keep all implementation details inside its directory – nothing in `src/nodes/`.
+* Provide `graph.py`, `state.py`, and a `nodes/` package.
+* Make sure `graph.py` exposes a compiled graph (e.g. `my_agent = builder.compile()`) that can be imported by the main agent.
+* Keep prompts, model calls, and heavy logic inside nodes, **never** in `graph.py`.
+
+---
+
+# Additional Rules
+- If you notice the project structure has changed from this specification please notify me.

@@ -1,0 +1,17 @@
+---
+globs: src/**/nodes/*.py
+alwaysApply: false
+---
+
+- All agent nodes should be defined inside of the `nodes` module for an agent.
+- All nodes should include the appropriate input and output state type hints.
+- Nodes should use the logger imported from `src/logging_config.py`.
+    - All nodes should start by logging their name, in the form `logger.debug("NODE: {agent_name}.{node_name}")`.
+    - If the node is not part of a sub-agent do not include the `{agent_name}.` portion of the name.
+    - Most all logging inside of nodes should be `debug`, `warning`, or `error`.
+    - Nodes should avoid using `info` to keep from cluttering console output during node execution.
+- Nodes that act as adapters for invoking subgraphs should follow the naming pattern `wrapped_{agent_name}_agent`.
+    - All these nodes should do is convert the parent graphs state into the subagents state.
+    - Aside from converting between input and output state formats, these nodes should not contain any other logic.
+- If a node needs to request human feedback, it should do so by importing the appropriate dispatch function from `src/hitl.py`.
+    - Place the dispatch as close to the top of the node as possible.

@@ -1,0 +1,9 @@
+---
+globs: src/**/state.py
+alwaysApply: false
+---
+
+- The main, overall state for the agent should be defined in `src/state.py`.
+- State for sub-agents should be defined in their individual `src/agents/{agent_name}/state.py`
+- The API for agents should be clearly defined by Input and Output states that only expose elements of the agents state that are intended as part of its public API.
+- The internal state for the agent should subclass the Input and Output state and define any additional internal state needed by the agent.
