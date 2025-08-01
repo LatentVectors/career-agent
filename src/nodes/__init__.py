@@ -1,4 +1,5 @@
 from .chatbot import chatbot
+from .get_feedback import get_feedback
 from .job_requirements import get_job_requirements
 from .tool_node import tool_node
 from .wrapped_experience_agent import wrapped_experience_agent
@@ -12,4 +13,5 @@ __all__ = [
     "wrapped_responses_agent",
     "get_job_requirements",
     "write_cover_letter",
+    "get_feedback",
 ]

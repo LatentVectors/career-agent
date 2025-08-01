@@ -63,6 +63,9 @@ class MainState(TypedDict, MainInputState, MainOutputState):
     summarized_responses: Annotated[Optional[Dict[str, List[Summary]]], dict_reducer]
     """Summarized responses. The key is the source of the responses."""
 
+    cover_letter_feedback: Optional[str]
+    """Feedback for the cover letter."""
+
 
 class Summary(TypedDict):
     """Summary of the experience."""
@@ -92,6 +95,7 @@ class PartialMainState(TypedDict, total=False):
     hiring_manager_message: Optional[str]
     summarized_experience: Optional[Dict[str, List[Summary]]]
     summarized_responses: Optional[Dict[str, List[Summary]]]
+    cover_letter_feedback: Optional[str]
 
 
 def get_main_input_state(
