@@ -21,6 +21,12 @@ def write_cover_letter(state: MainState) -> PartialMainState:
         logger.error("Summarized experience and responses are required")
         raise ValueError("Summarized experience and responses are required")
 
+    word_count = 0
+    character_count = 0
+    if current_draft:
+        word_count = len(current_draft.split())
+        character_count = len(current_draft)
+
     cover_letter = chain.invoke(
         {
             "job_description": job_description,
@@ -28,6 +34,8 @@ def write_cover_letter(state: MainState) -> PartialMainState:
             "responses": format_summary(responses, "Candidate Responses"),
             "feedback": feedback,
             "current_draft": current_draft,
+            "word_count": word_count,
+            "character_count": character_count,
         }
     )
     return {"cover_letter": cover_letter}
@@ -74,6 +82,11 @@ user_prompt = """
 <Draft Feedback>
 {feedback}
 </Draft Feedback>
+
+<Draft Metrics>
+Word Count: {word_count}
+Character Count: {character_count}
+</Draft Metrics>
 
 <Current Draft>
 {current_draft}
