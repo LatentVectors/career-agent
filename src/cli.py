@@ -51,14 +51,17 @@ def graph() -> None:
 
 
 @app.command()
-def chat(replay: bool = typer.Option(False, "--replay", help="Replay recorded requests.")) -> None:
+def chat(
+    replay: bool = typer.Option(False, "--replay", help="Replay recorded requests."),
+    thread_id: str = typer.Option("1", "--thread-id", help="A thread ID for the agent config."),
+) -> None:
     """Chat with the agent."""
-
     from rich.prompt import Prompt
     from vcr import VCR  # type: ignore
 
     from .callbacks import LoggingCallbackHandler
     from .config import CASSETTE_DIR, DATA_DIR
+    from .graph import stream_agent
     from .logging_config import logger
     from .storage.FileStorage import FileStorage
     from .utils import serialize_state
@@ -90,25 +93,23 @@ def chat(replay: bool = typer.Option(False, "--replay", help="Replay recorded re
 
         input_state = get_main_input_state(job, background)
         config: RunnableConfig = {
-            "configurable": {"thread_id": "1"},
+            "configurable": {"thread_id": thread_id},
             "callbacks": [LoggingCallbackHandler()],
         }
 
+        # Wrap the execution in a VCR cassette to capture all requests.
         with vcr.use_cassette("chat.yaml"):
-            print("\n\n=== GRAPH EVENTS ===\n")
-            for event in GRAPH.stream(input_state, config=config):  # type: ignore[arg-type]
-                for key in event.keys():
-                    print(f"EVENT: {key}")
+            graph = stream_agent(input_state, config)
 
-            final_state = GRAPH.get_state(config=config)
-            output_path = DATA_DIR / "state.json"
-            with open(output_path, "w") as f:
-                f.write(serialize_state(final_state.values))
+        final_state = graph.get_state(config=config)
+        output_path = DATA_DIR / "state.json"
+        with open(output_path, "w") as f:
+            f.write(serialize_state(final_state.values))
 
-            cover_letter = final_state.values.get("cover_letter")
-            if cover_letter:
-                print("\n\n=== COVER LETTER ===\n")
-                print(cover_letter, end="\n\n")
+        cover_letter = final_state.values.get("cover_letter")
+        if cover_letter:
+            print("\n\n=== COVER LETTER ===\n")
+            print(cover_letter, end="\n\n")
     except Exception as e:
         logger.error(f"Error chatting: {e}", exc_info=True)
         raise e

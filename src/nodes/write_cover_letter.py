@@ -10,7 +10,7 @@ from src.state import MainState, PartialMainState, Summary
 
 def write_cover_letter(state: MainState) -> PartialMainState:
     """Write a cover letter for the job."""
-    logger.info("NODE: write_cover_letter")
+    logger.debug("NODE: write_cover_letter")
     job_description = state["job_description"]
     summaries = state["summarized_experience"]
     responses = state["summarized_responses"]

@@ -13,7 +13,7 @@ from ..state import ExperienceState, ExperienceSummary, PartialExperienceState
 
 def summarize(state: ExperienceState) -> PartialExperienceState:
     """Summarize the work experience."""
-    logger.info("NODE: experience_summarizer.summarize")
+    logger.debug("NODE: experience_summarizer.summarize")
     requirements = state["job_requirements"]
     if requirements is None or len(requirements) == 0:
         logger.warning("No job requirements found. Returning empty summary.")
@@ -39,7 +39,7 @@ def summarize(state: ExperienceState) -> PartialExperienceState:
             for v in validated
         ]
         if len(summary) == 0:
-            logger.info("No summaries found. Returning empty summary.")
+            logger.debug("No summaries found. Returning empty summary.")
             return {"summary": None}
         return {"summary": summary}
     except Exception as e:

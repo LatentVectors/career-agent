@@ -1,8 +1,14 @@
+from __future__ import annotations
+
 from typing import List
 
+from langchain_core.runnables.config import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
-from langgraph.types import Send
+from langgraph.graph.state import CompiledStateGraph
+from langgraph.types import Command, Send
+
+from src.hitl import INTERRUPT_KEY, handle_interrupts
 
 from .nodes import (
     get_job_requirements,
@@ -10,7 +16,7 @@ from .nodes import (
     wrapped_responses_agent,
     write_cover_letter,
 )
-from .state import MainState
+from .state import MainInputState, MainState
 
 # === NODES ===
 WRAPPED_EXPERIENCE_AGENT_NODE = "wrapped_experience_agent"
@@ -59,3 +65,38 @@ builder.add_edge(WRITE_COVER_LETTER_NODE, END)
 # === GRAPH ===
 memory = MemorySaver()
 GRAPH = builder.compile(checkpointer=memory)
+
+
+def stream_agent(
+    input_state: MainInputState, config: RunnableConfig
+) -> CompiledStateGraph[MainState, None, MainState, MainState]:
+    """Stream the agent.
+
+    Args:
+        input_state: The input state.
+        thread_id: The thread ID.
+
+    Returns:
+        The compiled state graph.
+    """
+
+    print("\n\n=== GRAPH EVENTS ===\n")
+    current_input: object = input_state
+    while True:
+        stream = GRAPH.stream(current_input, config=config)  # type: ignore[arg-type]
+        interrupted: bool = False
+        for event in stream:
+            print("--> Event Batch <--")
+            for key in event.keys():
+                print(f"EVENT: {key}")
+            interrupts = event.get(INTERRUPT_KEY, None)
+            if interrupts:
+                print("interrupts:")
+                commands = handle_interrupts(interrupts)
+                current_input = Command(resume=commands)
+                interrupted = True
+                break
+            print()
+        if not interrupted:
+            break
+    return GRAPH  # type: ignore[return-value]

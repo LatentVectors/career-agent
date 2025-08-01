@@ -9,7 +9,7 @@ from ..state import ExperienceState, PartialExperienceState
 
 def review(state: ExperienceState) -> PartialExperienceState:
     """Review the work experience."""
-    logger.info("NODE: experience_summarizer.review")
+    logger.debug("NODE: experience_summarizer.review")
     try:
         response = chain.invoke(
             {

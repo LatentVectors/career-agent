@@ -10,7 +10,7 @@ from ..state import MainState, PartialMainState
 
 def wrapped_experience_agent(state: MainState) -> PartialMainState:
     """Summarize experience."""
-    logger.info("NODE: wrapped_experience_agent")
+    logger.debug("NODE: wrapped_experience_agent")
     title = state["current_experience_title"]
     if title is None:
         raise ValueError("Current experience title is required")

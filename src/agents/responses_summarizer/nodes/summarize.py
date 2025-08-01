@@ -12,7 +12,7 @@ from ..state import PartialResponsesState, ResponsesState
 
 def summarize(state: ResponsesState) -> PartialResponsesState:
     """Summarize the responses."""
-    logger.info("NODE: responses_summarizer.summarize")
+    logger.debug("NODE: responses_summarizer.summarize")
     responses = state["responses"]
     job_requirements = state["job_requirements"]
     if not responses or not job_requirements:

@@ -16,7 +16,7 @@ class JobRequirements(BaseModel):
 
 def get_job_requirements(state: MainState) -> PartialMainState:
     """Extract job requirements from a job description."""
-    logger.info("NODE: get_job_requirements")
+    logger.debug("NODE: get_job_requirements")
     job_description = state["job_description"]
     response = chain.invoke({"job_description": job_description})
     requirements = JobRequirements.model_validate(response)

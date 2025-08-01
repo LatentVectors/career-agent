@@ -12,7 +12,7 @@ from ..state import MainState, PartialMainState
 
 def wrapped_responses_agent(state: MainState) -> PartialMainState:
     """Wrapped responses agent."""
-    logger.info("NODE: wrapped_responses_agent")
+    logger.debug("NODE: wrapped_responses_agent")
     motivations_and_interests = state["motivations_and_interests"]
     if not motivations_and_interests:
         return {"summarized_responses": {}}
