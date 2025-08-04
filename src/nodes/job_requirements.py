@@ -7,23 +7,24 @@ from pydantic import BaseModel, Field
 from src.logging_config import logger
 from src.models import OpenAIModels, get_model
 
-from ..state import MainState, PartialMainState
+from ..state import InternalState, PartialInternalState
 
 
 class JobRequirements(BaseModel):
     requirements: List[str] = Field(description="A list of requirements for the job.")
 
 
-def get_job_requirements(state: MainState) -> PartialMainState:
+def get_job_requirements(state: InternalState) -> PartialInternalState:
     """Extract job requirements from a job description."""
     logger.debug("NODE: get_job_requirements")
-    job_description = state["job_description"]
+    logger.debug(f"State Type: {type(state)}")
+    job_description = state.job_description
     response = chain.invoke({"job_description": job_description})
     requirements = JobRequirements.model_validate(response)
     job_requirements = {}
     for i, requirement in enumerate(requirements.requirements):
         job_requirements[i + 1] = requirement
-    return {"job_requirements": job_requirements}
+    return PartialInternalState(job_requirements=job_requirements)
 
 
 system_prompt = """

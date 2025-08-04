@@ -19,7 +19,7 @@ from .nodes import (
     wrapped_responses_agent,
     write_cover_letter,
 )
-from .state import MainInputState, MainState
+from .state import InputState, InternalState
 
 
 # === NODES ===
@@ -33,7 +33,7 @@ class Node(StrEnum):
     START = START
 
 
-builder = StateGraph(MainState)
+builder = StateGraph(InternalState)
 builder.add_node(Node.WRAPPED_EXPERIENCE_AGENT, wrapped_experience_agent)
 builder.add_node(Node.GET_JOB_REQUIREMENTS, get_job_requirements)
 builder.add_node(Node.WRITE_COVER_LETTER, write_cover_letter, defer=True)
@@ -42,30 +42,33 @@ builder.add_node(Node.FEEDBACK, get_feedback)
 
 
 # === EDGES ===
-def map_experience_edge(state: MainState) -> List[Send]:
+def map_experience_edge(state: InternalState) -> List[Send]:
     """Map experience edge."""
+    logger.debug("EDGE: map_experience_edge")
     next_nodes: List[Send] = []
-    if len(state["experience"]) > 0:
-        for exp in state["experience"]:
+    if len(state.experience) > 0:
+        for exp in state.experience:
+            # Make a complete copy of the current state.
+            new_state = InternalState.model_validate(state)
+            # Set the unique values for the mapped branches.
+            new_state.current_experience = exp.content
+            new_state.current_experience_title = exp.title
             next_nodes.append(
+                # Send a validated internal state object, instead of a dict.
                 Send(
                     Node.WRAPPED_EXPERIENCE_AGENT,
-                    {
-                        "current_experience": exp.content,
-                        "current_experience_title": exp.title,
-                        "job_requirements": state["job_requirements"],
-                    },
+                    new_state,
                 )
             )
     return next_nodes
 
 
 def route_cover_letter_feedback_edge(
-    state: MainState,
+    state: InternalState,
 ) -> Literal[Node.WRITE_COVER_LETTER, Node.END]:
     """Route cover letter feedback edge."""
-    cover_letter_feedback = state["cover_letter_feedback"]
-    if cover_letter_feedback:
+    logger.debug("EDGE: route_cover_letter_feedback_edge")
+    if state.cover_letter_feedback:
         return Node.WRITE_COVER_LETTER
     return Node.END
 
@@ -93,8 +96,8 @@ GRAPH = builder.compile(checkpointer=memory)
 
 
 def stream_agent(
-    input_state: MainInputState, config: RunnableConfig
-) -> CompiledStateGraph[MainState, None, MainState, MainState]:
+    input_state: InputState, config: RunnableConfig
+) -> CompiledStateGraph[InternalState, None, InternalState, InternalState]:
     """Stream the agent.
 
     Args:

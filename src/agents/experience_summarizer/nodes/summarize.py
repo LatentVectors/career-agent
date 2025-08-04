@@ -8,21 +8,21 @@ from pydantic import BaseModel, Field
 from src.logging_config import logger
 from src.models import OpenAIModels, get_model
 
-from ..state import ExperienceState, ExperienceSummary, PartialExperienceState
+from ..state import ExperienceSummary, InternalState, PartialInternalState
 
 
-def summarize(state: ExperienceState) -> PartialExperienceState:
+def summarize(state: InternalState) -> PartialInternalState:
     """Summarize the work experience."""
     logger.debug("NODE: experience_summarizer.summarize")
-    requirements = state["job_requirements"]
+    requirements = state.job_requirements
     if requirements is None or len(requirements) == 0:
         logger.warning("No job requirements found. Returning empty summary.")
-        return {"summary": None}
+        return PartialInternalState(summary=[])
     try:
         job_requirements = ""
         for key, value in requirements.items():
             job_requirements += f"{key}) {value}\n"
-        experience = state["experience"]
+        experience = state.experience
         response = chain.invoke(
             {
                 "job_requirements": job_requirements,
@@ -32,18 +32,14 @@ def summarize(state: ExperienceState) -> PartialExperienceState:
         )
         validated = Summary.model_validate(response).experience_summaries
         summary: List[ExperienceSummary] = [
-            {
-                "requirement": v.requirement,
-                "summary": v.summary,
-            }
-            for v in validated
+            ExperienceSummary(requirement=v.requirement, summary=v.summary) for v in validated
         ]
         if len(summary) == 0:
             logger.debug("No summaries found. Returning empty summary.")
-            return {"summary": None}
-        return {"summary": summary}
+            return PartialInternalState(summary=None)
+        return PartialInternalState(summary=summary)
     except Exception as e:
-        logger.error(f"Error summarizing experience: {e}", exc_info=True)
+        logger.exception(f"Error summarizing experience: {e}")
         raise e
 
 

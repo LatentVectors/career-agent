@@ -5,40 +5,30 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from src.logging_config import logger
 from src.models import OpenAIModels, get_model
-from src.state import MainState, PartialMainState, Summary
+from src.state import InternalState, PartialInternalState, Summary
 
 
-def write_cover_letter(state: MainState) -> PartialMainState:
+def write_cover_letter(state: InternalState) -> PartialInternalState:
     """Write a cover letter for the job."""
     logger.debug("NODE: write_cover_letter")
-    job_description = state["job_description"]
-    summaries = state["summarized_experience"]
-    responses = state["summarized_responses"]
-    # TODO: Why is there no key in the state? Is it because I am returning a partial state?
-    feedback: str | None = state.get("cover_letter_feedback")
-    current_draft: str | None = state.get("cover_letter")
-    if summaries is None or responses is None:
-        logger.error("Summarized experience and responses are required")
-        raise ValueError("Summarized experience and responses are required")
-
     word_count = 0
     character_count = 0
-    if current_draft:
-        word_count = len(current_draft.split())
-        character_count = len(current_draft)
+    if state.cover_letter:
+        word_count = len(state.cover_letter.split())
+        character_count = len(state.cover_letter)
 
     cover_letter = chain.invoke(
         {
-            "job_description": job_description,
-            "experience": format_summary(summaries, "Experience"),
-            "responses": format_summary(responses, "Candidate Responses"),
-            "feedback": feedback,
-            "current_draft": current_draft,
+            "job_description": state.job_description,
+            "experience": format_summary(state.summarized_experience, "Experience"),
+            "responses": format_summary(state.summarized_responses, "Candidate Responses"),
+            "feedback": state.cover_letter_feedback,
+            "current_draft": state.cover_letter,
             "word_count": word_count,
             "character_count": character_count,
         }
     )
-    return {"cover_letter": cover_letter}
+    return PartialInternalState(cover_letter=cover_letter)
 
 
 def format_summary(summaries: dict[str, List[Summary]], title_header: str) -> str:
@@ -47,8 +37,7 @@ def format_summary(summaries: dict[str, List[Summary]], title_header: str) -> st
     for title in summaries.keys():
         formatted_summary += f"<{title_header}>{title}</{title_header}>\n"
         for summary in summaries[title]:
-            content = summary["summary"]
-            formatted_summary += f"<Summary>\n{content}\n</Summary>\n"
+            formatted_summary += f"<Summary>\n{summary.summary}\n</Summary>\n"
     return formatted_summary
 
 

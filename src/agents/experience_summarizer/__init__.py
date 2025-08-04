@@ -1,4 +1,4 @@
 from .graph import experience_agent
-from .state import ExperienceInputState, ExperienceOutputState
+from .state import InputState, OutputState
 
-__all__ = ["experience_agent", "ExperienceInputState", "ExperienceOutputState"]
+__all__ = ["experience_agent", "InputState", "OutputState"]

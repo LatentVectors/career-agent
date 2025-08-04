@@ -1,9 +1,11 @@
 from typing import TypedDict
 
+from pydantic import BaseModel
+
 from src.types import CandidateResponse, JobRequirements, RequirementSummary
 
 
-class ResponsesInputState(TypedDict):
+class InputState(BaseModel):
     """Input state for the responses summarizer."""
 
     source: str
@@ -16,20 +18,21 @@ class ResponsesInputState(TypedDict):
     """The job requirements."""
 
 
-class ResponsesOutputState(TypedDict):
+class OutputState(BaseModel):
     """Output state for the responses summarizer."""
 
-    summaries: list[RequirementSummary]
+    summaries: list[RequirementSummary] = []
     """A list of summaries of the responses."""
 
 
-class ResponsesState(TypedDict, ResponsesInputState, ResponsesOutputState):
+class InternalState(InputState, OutputState, BaseModel):
     """State for the responses summarizer."""
 
     pass
 
 
-# NOTE: The this should match the ResponsesState but with total=False.
-class PartialResponsesState(TypedDict, total=False):
-    responses: list[CandidateResponse]
-    summaries: list[RequirementSummary]
+class PartialInternalState(TypedDict, total=False):
+    source: str | None
+    responses: list[CandidateResponse] | None
+    job_requirements: JobRequirements | None
+    summaries: list[RequirementSummary] | None

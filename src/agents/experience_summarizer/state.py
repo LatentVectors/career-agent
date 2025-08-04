@@ -1,28 +1,30 @@
 from __future__ import annotations
 
-from typing import List, Optional, TypedDict
+from typing import List, TypedDict
+
+from pydantic import BaseModel
 
 from src.types import JobRequirements
 
 
-class ExperienceInputState(TypedDict):
+class InputState(BaseModel):
     """The input state for the experience agent."""
 
-    job_requirements: Optional[JobRequirements]
+    job_requirements: JobRequirements | None = None
     """The requirements for the job."""
 
     experience: str
     """The work experience."""
 
 
-class ExperienceOutputState(TypedDict):
+class OutputState(BaseModel):
     """The output state for the experience agent."""
 
-    summary: Optional[List[ExperienceSummary]]
+    summary: List[ExperienceSummary] = []
     """The summary of the experience."""
 
 
-class ExperienceSummary(TypedDict):
+class ExperienceSummary(BaseModel):
     """Summary of relevant experience."""
 
     requirement: List[int]
@@ -32,31 +34,15 @@ class ExperienceSummary(TypedDict):
     """The summary of the experience."""
 
 
-class ExperienceState(TypedDict):
+class InternalState(InputState, OutputState, BaseModel):
     """The state for the experience agent."""
 
-    job_description: str
-    """The target job description."""
-
-    job_requirements: Optional[JobRequirements]
-    """The requirements for the job."""
-
-    experience: str
-    """The original experience."""
-
-    matches: Optional[str]
-    """The matches between the job description and the experience."""
-
-    summary: Optional[List[ExperienceSummary]]
-    """The summary of the experience."""
+    pass
 
 
-# NOTE: PartialExperienceState should mirror ExperienceState.
-class PartialExperienceState(TypedDict, total=False):
+class PartialInternalState(TypedDict, total=False):
     """The partial state for the experience agent."""
 
-    job_description: str
-    job_requirements: Optional[JobRequirements]
-    experience: str
-    matches: Optional[str]
-    summary: Optional[List[ExperienceSummary]]
+    job_requirements: JobRequirements | None
+    experience: str | None
+    summary: List[ExperienceSummary] | None

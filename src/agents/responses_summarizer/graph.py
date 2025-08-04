@@ -1,23 +1,29 @@
+from enum import StrEnum
+
 from langgraph.graph import END, START, StateGraph
 
 from .nodes.summarize import summarize
-from .state import ResponsesInputState, ResponsesOutputState, ResponsesState
+from .state import InputState, InternalState, OutputState
 
 builder = StateGraph(
-    input_schema=ResponsesInputState,
-    output_schema=ResponsesOutputState,
-    state_schema=ResponsesState,
+    InternalState,
+    input_schema=InputState,
+    output_schema=OutputState,
 )
 
-SUMMARIZE_NODE = "summarize"
+
+class Node(StrEnum):
+    SUMMARIZE = "summarize"
+    START = START
+    END = END
 
 
 # === NODES ===
-builder.add_node(SUMMARIZE_NODE, summarize)
+builder.add_node(Node.SUMMARIZE, summarize)
 
 
 # === EDGES ===
-builder.add_edge(START, SUMMARIZE_NODE)
-builder.add_edge(SUMMARIZE_NODE, END)
+builder.add_edge(Node.START, Node.SUMMARIZE)
+builder.add_edge(Node.SUMMARIZE, Node.END)
 
 graph = builder.compile()

@@ -1,14 +1,14 @@
 from src.hitl import dispatch_message_interrupt
 from src.logging_config import logger
-from src.state import MainState, PartialMainState
+from src.state import InternalState, PartialInternalState
 
 
-def get_feedback(state: MainState) -> PartialMainState:
+def get_feedback(state: InternalState) -> PartialInternalState:
     """Get feedback from the user."""
-    cover_letter = state["cover_letter"]
+    cover_letter = state.cover_letter
     if not cover_letter:
         logger.warning("No cover letter found in state.")
-        return {}
+        return PartialInternalState()
     message = (
         "=== COVER LETTER ===\n"
         f"{cover_letter}\n"
@@ -19,5 +19,5 @@ def get_feedback(state: MainState) -> PartialMainState:
     response = dispatch_message_interrupt(message)
     content = response["response"].strip()
     if content.lower() in ["no", "n", ""]:
-        return {"cover_letter_feedback": None}
-    return {"cover_letter_feedback": content}
+        return PartialInternalState(cover_letter_feedback=None)
+    return PartialInternalState(cover_letter_feedback=content)

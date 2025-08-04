@@ -7,17 +7,17 @@ from src.logging_config import logger
 from src.models import OpenAIModels, get_model
 from src.types import RequirementSummary
 
-from ..state import PartialResponsesState, ResponsesState
+from ..state import InternalState, PartialInternalState
 
 
-def summarize(state: ResponsesState) -> PartialResponsesState:
+def summarize(state: InternalState) -> PartialInternalState:
     """Summarize the responses."""
     logger.debug("NODE: responses_summarizer.summarize")
-    responses = state["responses"]
-    job_requirements = state["job_requirements"]
+    responses = state.responses
+    job_requirements = state.job_requirements
     if not responses or not job_requirements:
         logger.warning("No responses or job requirements provided.")
-        return {"summaries": []}
+        return PartialInternalState(summaries=[])
 
     formatted_responses = ""
     for response in responses:
@@ -36,9 +36,9 @@ def summarize(state: ResponsesState) -> PartialResponsesState:
     )
     logger.debug(f"Response: {result}")
     validated = Summaries.model_validate(result)
-    source = state["source"]
-    return {
-        "summaries": [
+    source = state.source
+    return PartialInternalState(
+        summaries=[
             RequirementSummary(
                 source=source if source else "NA",
                 requirements=summary.requirements,
@@ -46,7 +46,7 @@ def summarize(state: ResponsesState) -> PartialResponsesState:
             )
             for summary in validated.summaries
         ]
-    }
+    )
 
 
 system_prompt = """

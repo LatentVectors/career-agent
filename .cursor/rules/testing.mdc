@@ -1,0 +1,10 @@
+---
+globs: test/**/test_*.py
+alwaysApply: false
+---
+
+- Don't import `pytest` unless you use it directly.
+- Test functions should be descriptive and test one specific behavior
+- Use pytest fixtures for common setup
+- Mock external dependencies
+- Use parametrized tests for multiple input scenarios

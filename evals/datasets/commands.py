@@ -54,7 +54,7 @@ def _interactive_dataset_selection() -> str:
             selected_index = int(choice) - 1
             return available_datasets[selected_index]
         except ValueError:
-            logger.error("Invalid selection. Please try again.")
+            logger.exception("Invalid selection. Please try again.")
 
 
 @app.command()

@@ -132,7 +132,7 @@ def chat(
             print("\n\n=== COVER LETTER ===\n")
             print(cover_letter, end="\n\n")
     except Exception as e:
-        logger.error(f"Error chatting: {e}", exc_info=True)
+        logger.exception(f"Error chatting: {e}")
         raise e
 
 
