@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     langsmith_endpoint: str
     langsmith_tracing: bool
 
+    # Database configuration
+    database_url: str = Field(
+        default=f"sqlite:///{DATA_DIR}/career_agent.db", description="SQLite database URL"
+    )
+
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / ".env",
         env_file_encoding="utf-8",

@@ -1,39 +1,14 @@
-"""Data schemas for the application."""
+from pydantic import BaseModel
 
-from .application import CandidateResponse, JobRequirements, RequirementSummary
-from .background import Background
-from .background import Experience as BackgroundExperience
-from .interview import InterviewQuestion
-from .job import Job
-from .motivation import MotivationAndInterest
-from .resume import (
-    Certification,
-    Education,
-    ResumeData,
-    UserProfile,
-)
-from .resume import (
-    Experience as ResumeExperience,
-)
+JobRequirements = dict[int, str]
 
-__all__ = [
-    # Application models
-    "CandidateResponse",
-    "JobRequirements",
-    "RequirementSummary",
-    # Background models
-    "Background",
-    "BackgroundExperience",
-    # Interview models
-    "InterviewQuestion",
-    # Job models
-    "Job",
-    # Motivation models
-    "MotivationAndInterest",
-    # Resume models
-    "Certification",
-    "Education",
-    "ResumeExperience",
-    "ResumeData",
-    "UserProfile",
-]
+
+class RequirementSummary(BaseModel):
+    """A summary of a requirement."""
+
+    source: str
+    """The source of the summary."""
+    requirement: int
+    """The requirement that the summary covers."""
+    summary: str
+    """A summary of the requirement."""

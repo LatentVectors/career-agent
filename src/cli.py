@@ -6,129 +6,14 @@ import tempfile
 import typer
 from langchain_core.runnables.config import RunnableConfig
 
-from src.storage import get_background
-
 from .graph import GRAPH
 from .state import get_main_input_state
+from .storage.cli import db_app
 
 app = typer.Typer()
 
-# ---------------------------------------------------------------------------
-# User profile commands
-# ---------------------------------------------------------------------------
-user_app = typer.Typer(help="Manage user profile data.")
-app.add_typer(user_app, name="user")
-
-
-# NOTE: We import inside commands to avoid heavy dependencies at CLI startup.
-@user_app.command("show")
-def user_show() -> None:  # noqa: D401
-    """Display the stored user profile."""
-
-    from rich.pretty import pprint  # Lazy import
-
-    from .config import DATA_DIR
-    from .storage.FileStorage import FileStorage
-
-    storage = FileStorage(DATA_DIR)
-    profile = storage.get_user_profile()
-
-    if profile.is_empty:
-        typer.echo("No user profile found. Use 'agentic user set' to create one.")
-        return
-
-    pprint(profile.model_dump())
-
-
-@user_app.command("set")
-def user_set(
-    field: str = typer.Argument(..., help="Field to update: name, email, phone, linkedin_url"),
-    value: str = typer.Argument(..., help="New value for the field."),
-) -> None:  # noqa: D401
-    """Set or update a scalar field of the profile."""
-
-    from .config import DATA_DIR
-    from .storage.FileStorage import FileStorage
-
-    allowed = {"name", "email", "phone", "linkedin_url"}
-    if field not in allowed:
-        typer.echo(f"Unknown field '{field}'. Allowed fields: {', '.join(sorted(allowed))}.")
-        raise typer.Exit(code=1)
-
-    storage = FileStorage(DATA_DIR)
-    profile = storage.get_user_profile()
-    setattr(profile, field, value)
-    storage.save_user_profile(profile)
-    typer.echo(f"Updated {field}.")
-
-
-@user_app.command("add-education")
-def user_add_education(
-    degree: str = typer.Option(..., prompt=True),
-    major: str = typer.Option(..., prompt=True),
-    institution: str = typer.Option(..., prompt=True),
-    grad_date: str = typer.Option(..., prompt=True, help="Graduation date, e.g. 2024-05"),
-) -> None:  # noqa: D401
-    """Append an education entry to the profile."""
-
-    from .config import DATA_DIR
-    from .schemas import Education
-    from .storage.FileStorage import FileStorage
-
-    storage = FileStorage(DATA_DIR)
-    profile = storage.get_user_profile()
-
-    profile.education.append(
-        Education(
-            degree=degree,
-            major=major,
-            institution=institution,
-            grad_date=grad_date,
-        )
-    )
-    storage.save_user_profile(profile)
-    typer.echo("Education added.")
-
-
-@user_app.command("add-cert")
-def user_add_certification(
-    title: str = typer.Option(..., prompt=True),
-    date: str = typer.Option(..., prompt=True, help="Date obtained, e.g. 2023-11"),
-) -> None:  # noqa: D401
-    """Append a certification entry to the profile."""
-
-    from .config import DATA_DIR
-    from .schemas import Certification
-    from .storage.FileStorage import FileStorage
-
-    storage = FileStorage(DATA_DIR)
-    profile = storage.get_user_profile()
-
-    profile.certifications.append(Certification(title=title, date=date))
-    storage.save_user_profile(profile)
-    typer.echo("Certification added.")
-
-
-@app.command()
-def save_job(company_name: str) -> None:
-    """Save a job to the file storage."""
-    from .config import DATA_DIR
-    from .schemas import Job
-    from .storage.FileStorage import FileStorage
-
-    job = Job(
-        company_name=company_name.strip(),
-        description="",
-    )
-
-    storage = FileStorage(DATA_DIR)
-    if storage.job_exists(company_name):
-        typer.echo(f"Job {company_name} already exists")
-        replace = typer.confirm("Replace job?")
-        if not replace:
-            return
-    storage.save_job(job)
-    typer.echo(f"Job {company_name} saved")
+# Add database commands
+app.add_typer(db_app, name="db")
 
 
 @app.command()
@@ -170,6 +55,7 @@ def graph(
 def chat(
     replay: bool = typer.Option(False, "--replay", help="Replay recorded requests."),
     thread_id: str = typer.Option("1", "--thread-id", help="A thread ID for the agent config."),
+    user_id: int = typer.Option(1, "--user-id", help="The user ID to use for the chat session."),
 ) -> None:
     """Chat with the agent."""
     from rich.prompt import Prompt
@@ -179,7 +65,7 @@ def chat(
     from .config import CASSETTE_DIR, DATA_DIR
     from .graph import stream_agent
     from .logging_config import logger
-    from .storage.FileStorage import FileStorage
+    from .storage import db_manager
     from .utils import serialize_state
 
     vcr = VCR(
@@ -189,25 +75,61 @@ def chat(
     )
 
     try:
-        storage = FileStorage(DATA_DIR)
-        jobs = storage.list_jobs()
-        if not jobs:
-            print("No jobs found")
+        # Get user
+        user = db_manager.users.get_by_id(user_id)
+        if user is None:
+            typer.echo(f"No user found with ID {user_id}.")
+            raise typer.Exit(code=1)
+
+        # Get all companies with job postings
+        companies = db_manager.companies.get_all()
+        if not companies:
+            print("No companies found")
             return
-        job_name = Prompt.ask("Select a job", choices=[j.strip(".md") for j in jobs])
-        job = storage.get_job(job_name)
-        background = get_background(storage)
 
-        print(f"Job: {job_name}")
-        print("Background:")
-        for experience in background["experience"]:
-            print(f"\t\t{experience.title}")
-        print()
-        print(f"\tMotivations and Interests ({len(background['motivations_and_interests'])})")
-        print(f"\tInterview Questions ({len(background['interview_questions'])})")
-        print()
+        # Show available companies
+        print("Available companies:")
+        for i, company in enumerate(companies, 1):
+            print(f"{i}. {company.name}")
 
-        input_state = get_main_input_state(job, background)
+        # Let user select company
+        company_choice = Prompt.ask(
+            "Select a company", choices=[str(i) for i in range(1, len(companies) + 1)]
+        )
+        selected_company = companies[int(company_choice) - 1]
+
+        # Get job postings for the selected company
+        jobs = db_manager.job_postings.get_by_company_id(selected_company.id)
+        if not jobs:
+            print(f"No job postings found for {selected_company.name}")
+            return
+
+        # If multiple jobs, let user select one
+        if len(jobs) > 1:
+            print(f"Available jobs for {selected_company.name}:")
+            for i, job in enumerate(jobs, 1):
+                print(f"{i}. Job posting {job.id}")
+            job_choice = Prompt.ask(
+                "Select a job", choices=[str(i) for i in range(1, len(jobs) + 1)]
+            )
+            selected_job = jobs[int(job_choice) - 1]
+        else:
+            selected_job = jobs[0]
+
+        print(f"Job: {selected_company.name}")
+
+        # Get user data for the session
+        user_education = db_manager.educations.get_by_user_id(user_id)
+        user_certifications = db_manager.certifications.get_by_user_id(user_id)
+        user_experience = db_manager.experiences.get_by_user_id(user_id)
+        user_responses = db_manager.candidate_responses.get_by_user_id(user_id)
+
+        # TODO: Read motivations and interests should just be candidate responses from the database..
+        # TODO: Interview questions will be removed later.
+        # TODO: Read experience should just be experience from the database..
+        input_state = get_main_input_state(
+            selected_job, motivations_and_interests=None, interview_questions=None, experience=None
+        )
         config: RunnableConfig = {
             "configurable": {"thread_id": thread_id},
             "callbacks": [LoggingCallbackHandler()],

@@ -1,14 +1,8 @@
-from .FileStorage import FileStorage
-from .get_background import Background, get_background
-from .parse_interview_questions import InterviewQuestion
-from .parse_job import Job
-from .parse_motivations_and_interests import MotivationAndInterest
+"""Data persistence layer using SQLModel-based SQLite database."""
 
-__all__ = [
-    "FileStorage",
-    "Job",
-    "InterviewQuestion",
-    "MotivationAndInterest",
-    "Background",
-    "get_background",
+from .database import DatabaseManager, db_manager
+
+__all__: list[str] = [
+    "DatabaseManager",
+    "db_manager",
 ]

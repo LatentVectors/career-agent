@@ -1,4 +1,4 @@
-from ..schemas import Certification, Education, Experience, ResumeData
+from .types import ResumeCertification, ResumeData, ResumeEducation, ResumeExperience
 
 DUMMY_RESUME_DATA: dict[str, ResumeData] = {
     "ai_agent_developer": ResumeData(
@@ -9,7 +9,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
         linkedin_url="linkedin.com/in/liamgallagherai",
         professional_summary="Innovative and entrepreneurial engineer with a foundational background in data engineering and analytics, complemented by 3 years of hands-on experience building and shipping commercial Shopify applications. Now intensely focused on designing and building autonomous AI agents using LangChain, LangGraph, and the OpenAI API. Seeking to leverage a unique blend of data architecture, product development sense, and cutting-edge AI skills to create practical, intelligent automation solutions.",
         experience=[
-            Experience(
+            ResumeExperience(
                 title="Founder / Lead Developer (Entrepreneurial Venture)",
                 company="North Peak Digital",
                 location="Remote",
@@ -22,7 +22,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
                     "Gained deep experience in API integration, background job processing, and building reliable, scalable web services.",
                 ],
             ),
-            Experience(
+            ResumeExperience(
                 title="Data Engineer",
                 company="Global Consumer Goods Corp.",
                 location="Cincinnati, OH",
@@ -37,7 +37,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
             ),
         ],
         education=[
-            Education(
+            ResumeEducation(
                 degree="Bachelor of Science",
                 major="Information Systems",
                 institution="The Ohio State University",
@@ -67,7 +67,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
             "AWS (S3, Redshift, Lambda)",
         ],
         certifications=[
-            Certification(
+            ResumeCertification(
                 title="DeepLearning.AI - LangChain for LLM Application Development",
                 date="May 2024",
             )
@@ -81,7 +81,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
         linkedin_url="linkedin.com/in/eleanorvance",
         professional_summary="Results-driven Senior Data Scientist with over 8 years of experience in applying machine learning, statistical modeling, and data analysis to solve complex business problems. Proven ability to lead data-driven initiatives from concept to execution, delivering actionable insights that drive revenue growth and operational efficiency. Expert in Python, R, SQL, and cloud-based data platforms.",
         experience=[
-            Experience(
+            ResumeExperience(
                 title="Senior Data Scientist",
                 company="Innovatech Solutions Inc.",
                 location="San Francisco, CA",
@@ -94,7 +94,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
                     "Created and presented data visualizations and dashboards in Tableau to C-level executives, translating complex findings into strategic business recommendations.",
                 ],
             ),
-            Experience(
+            ResumeExperience(
                 title="Data Scientist",
                 company="DataDriven Co.",
                 location="Boston, MA",
@@ -108,13 +108,13 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
             ),
         ],
         education=[
-            Education(
+            ResumeEducation(
                 degree="Master of Science",
                 major="Data Science",
                 institution="Stanford University",
                 grad_date="May 2017",
             ),
-            Education(
+            ResumeEducation(
                 degree="Bachelor of Science",
                 major="Computer Science",
                 institution="University of California, Berkeley",
@@ -145,8 +145,10 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
             "A/B Testing",
         ],
         certifications=[
-            Certification(title="AWS Certified Machine Learning - Specialty", date="June 2022"),
-            Certification(title="Google Professional Data Engineer", date="August 2021"),
+            ResumeCertification(
+                title="AWS Certified Machine Learning - Specialty", date="June 2022"
+            ),
+            ResumeCertification(title="Google Professional Data Engineer", date="August 2021"),
         ],
     ),
     "software_developer": ResumeData(
@@ -157,7 +159,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
         linkedin_url="linkedin.com/in/marcusrivera",
         professional_summary="Creative and detail-oriented Full-Stack Developer with 5+ years of experience building and maintaining responsive web applications from the ground up. Proficient in JavaScript, React, Node.js, and modern DevOps practices. Passionate about writing clean, efficient code and collaborating in fast-paced Agile environments to deliver high-quality software solutions.",
         experience=[
-            Experience(
+            ResumeExperience(
                 title="Software Engineer",
                 company="NextGen Innovations",
                 location="Austin, TX",
@@ -170,7 +172,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
                     "Collaborated with a team of 5 developers to migrate legacy monolithic application to a microservices architecture, improving scalability and system resilience.",
                 ],
             ),
-            Experience(
+            ResumeExperience(
                 title="Junior Web Developer",
                 company="Digital Craft Agency",
                 location="Austin, TX",
@@ -184,7 +186,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
             ),
         ],
         education=[
-            Education(
+            ResumeEducation(
                 degree="Bachelor of Science",
                 major="Computer Science",
                 institution="Texas A&M University",
@@ -214,7 +216,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
             "Next.js",
         ],
         certifications=[
-            Certification(title="AWS Certified Developer - Associate", date="November 2023")
+            ResumeCertification(title="AWS Certified Developer - Associate", date="November 2023")
         ],
     ),
     "digital_marketing_manager": ResumeData(
@@ -225,7 +227,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
         linkedin_url="linkedin.com/in/sophiachen",
         professional_summary="Dynamic and data-driven Digital Marketing Manager with over 7 years of experience developing and executing comprehensive online marketing strategies. Proven track record of increasing brand awareness, lead generation, and ROI through effective management of SEO, SEM, content marketing, and social media campaigns. Adept at leveraging marketing analytics to drive continuous improvement and achieve key business objectives.",
         experience=[
-            Experience(
+            ResumeExperience(
                 title="Digital Marketing Manager",
                 company="Bright-Peak Financial",
                 location="Chicago, IL",
@@ -238,7 +240,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
                     "Analyzed campaign performance and user behavior using Google Analytics and HubSpot, providing actionable insights to the sales and product development teams.",
                 ],
             ),
-            Experience(
+            ResumeExperience(
                 title="Marketing Specialist",
                 company="Vantage Apparel",
                 location="Chicago, IL",
@@ -252,7 +254,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
             ),
         ],
         education=[
-            Education(
+            ResumeEducation(
                 degree="Bachelor of Business Administration",
                 major="Marketing",
                 institution="University of Illinois Urbana-Champaign",
@@ -278,8 +280,8 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
             "Data Analysis & Reporting",
         ],
         certifications=[
-            Certification(title="Google Ads Search Certification", date="October 2023"),
-            Certification(title="HubSpot Inbound Marketing Certified", date="January 2023"),
+            ResumeCertification(title="Google Ads Search Certification", date="October 2023"),
+            ResumeCertification(title="HubSpot Inbound Marketing Certified", date="January 2023"),
         ],
     ),
     "data_analyst": ResumeData(
@@ -290,7 +292,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
         linkedin_url="linkedin.com/in/isabellarossi",
         professional_summary="Detail-oriented Senior Data Analyst with 6 years of experience transforming complex datasets into actionable business intelligence. Expertise in SQL, Python, and data visualization tools like Tableau and Power BI. Proven ability to conduct in-depth analysis, create intuitive dashboards, and present findings to stakeholders to support strategic decision-making and identify opportunities for growth.",
         experience=[
-            Experience(
+            ResumeExperience(
                 title="Senior Data Analyst",
                 company="QuantumLeap Analytics",
                 location="New York, NY",
@@ -303,7 +305,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
                     "Collaborates with data engineering to define data requirements and ensure the integrity of data in the enterprise data warehouse.",
                 ],
             ),
-            Experience(
+            ResumeExperience(
                 title="Data Analyst",
                 company="MarketPulse Inc.",
                 location="New York, NY",
@@ -318,7 +320,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
             ),
         ],
         education=[
-            Education(
+            ResumeEducation(
                 degree="Bachelor of Science",
                 major="Statistics",
                 institution="New York University (NYU)",
@@ -340,8 +342,8 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
             "Requirements Gathering",
         ],
         certifications=[
-            Certification(title="Tableau Desktop Certified Associate", date="March 2022"),
-            Certification(
+            ResumeCertification(title="Tableau Desktop Certified Associate", date="March 2022"),
+            ResumeCertification(
                 title="Microsoft Certified: Power BI Data Analyst Associate", date="July 2021"
             ),
         ],
@@ -354,7 +356,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
         linkedin_url="linkedin.com/in/davidchenai",
         professional_summary="Accomplished Data Engineer with a strong background in building scalable data pipelines and distributed systems. Currently transitioning into AI Engineering, leveraging a deep understanding of data architecture to build and deploy robust machine learning systems. Passionate about MLOps, large language models (LLMs), and creating the infrastructure that powers intelligent applications.",
         experience=[
-            Experience(
+            ResumeExperience(
                 title="Data Engineer",
                 company="Cognitive Cloud Solutions",
                 location="Seattle, WA",
@@ -367,7 +369,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
                     "Architected a data lake on AWS S3 and a data warehouse using Redshift, serving as the single source of truth for analytics and ML teams.",
                 ],
             ),
-            Experience(
+            ResumeExperience(
                 title="Software Engineer (Data)",
                 company="Streamline Data Corp.",
                 location="Seattle, WA",
@@ -381,7 +383,7 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
             ),
         ],
         education=[
-            Education(
+            ResumeEducation(
                 degree="Bachelor of Science",
                 major="Computer Engineering",
                 institution="University of Washington",
@@ -407,10 +409,10 @@ DUMMY_RESUME_DATA: dict[str, ResumeData] = {
             "FastAPI",
         ],
         certifications=[
-            Certification(
+            ResumeCertification(
                 title="AWS Certified Machine Learning - Specialty", date="February 2024"
             ),
-            Certification(title="Google Professional Data Engineer", date="May 2022"),
+            ResumeCertification(title="Google Professional Data Engineer", date="May 2022"),
         ],
     ),
 }

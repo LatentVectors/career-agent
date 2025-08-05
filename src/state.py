@@ -4,7 +4,7 @@ from typing import Annotated, Dict, List, Optional, TypedDict
 
 from pydantic import BaseModel
 
-from .schemas import Background, Experience, InterviewQuestion, Job, MotivationAndInterest
+from src.storage.models import CandidateResponse, Experience, JobPosting
 
 
 def dict_reducer(a: Optional[dict], b: Optional[dict]) -> dict:
@@ -21,8 +21,8 @@ class InputState(BaseModel):
 
     job_description: str
     experience: List[Experience]
-    motivations_and_interests: List[MotivationAndInterest]
-    interview_questions: List[InterviewQuestion]
+    motivations_and_interests: List[CandidateResponse]
+    interview_questions: List[CandidateResponse]
 
 
 class OutputState(BaseModel):
@@ -81,8 +81,8 @@ class PartialInternalState(TypedDict, total=False):
 
     job_description: str | None
     experience: List[Experience] | None
-    motivations_and_interests: List[MotivationAndInterest] | None
-    interview_questions: List[InterviewQuestion] | None
+    motivations_and_interests: List[CandidateResponse] | None
+    interview_questions: List[CandidateResponse] | None
     experience_summary: str | None
     current_experience: str | None
     current_experience_title: str | None
@@ -98,13 +98,15 @@ class PartialInternalState(TypedDict, total=False):
 
 
 def get_main_input_state(
-    job: Job,
-    background: Background,
+    job: JobPosting,
+    motivations_and_interests: List[CandidateResponse],
+    interview_questions: List[CandidateResponse],
+    experience: List[Experience],
 ) -> InputState:
     """Get the state."""
     return InternalState(
         job_description=job.description,
-        motivations_and_interests=background["motivations_and_interests"],
-        interview_questions=background["interview_questions"],
-        experience=background["experience"],
+        motivations_and_interests=motivations_and_interests,
+        interview_questions=interview_questions,
+        experience=experience,
     )

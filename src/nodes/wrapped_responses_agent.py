@@ -1,5 +1,3 @@
-from src.schemas import CandidateResponse, MotivationAndInterest
-
 from ..agents.responses_summarizer import (
     InputState,
     OutputState,
@@ -22,7 +20,7 @@ def wrapped_responses_agent(state: InternalState) -> PartialInternalState:
         raise ValueError("Job requirements are required")
     result = responses_agent.invoke(
         InputState(
-            responses=to_candidate_response(motivations_and_interests),
+            responses=motivations_and_interests,
             job_requirements=job_requirements,
             source="responses",
         )
@@ -42,21 +40,3 @@ def wrapped_responses_agent(state: InternalState) -> PartialInternalState:
             ]
         }
     )
-
-
-def to_candidate_response(motivations: list[MotivationAndInterest]) -> list[CandidateResponse]:
-    """Format motivations and interests.
-
-    Args:
-        motivations: The motivations and interests to format.
-
-    Returns:
-        A list of candidate responses.
-    """
-    return [
-        CandidateResponse(
-            prompt=response.question,
-            response=response.answer,
-        )
-        for response in motivations
-    ]
