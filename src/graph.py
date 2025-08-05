@@ -18,6 +18,7 @@ from .nodes import (
     wrapped_experience_agent,
     wrapped_responses_agent,
     write_cover_letter,
+    write_resume,
 )
 from .state import InputState, InternalState
 
@@ -29,6 +30,7 @@ class Node(StrEnum):
     WRITE_COVER_LETTER = "write_cover_letter"
     WRAPPED_RESPONSES_AGENT = "wrapped_responses_agent"
     FEEDBACK = "get_feedback"
+    WRITE_RESUME = "write_resume"
     END = END
     START = START
 
@@ -39,6 +41,7 @@ builder.add_node(Node.GET_JOB_REQUIREMENTS, get_job_requirements)
 builder.add_node(Node.WRITE_COVER_LETTER, write_cover_letter, defer=True)
 builder.add_node(Node.WRAPPED_RESPONSES_AGENT, wrapped_responses_agent)
 builder.add_node(Node.FEEDBACK, get_feedback)
+builder.add_node(Node.WRITE_RESUME, write_resume)
 
 
 # === EDGES ===
@@ -65,12 +68,12 @@ def map_experience_edge(state: InternalState) -> List[Send]:
 
 def route_cover_letter_feedback_edge(
     state: InternalState,
-) -> Literal[Node.WRITE_COVER_LETTER, Node.END]:
+) -> Literal[Node.WRITE_COVER_LETTER, Node.WRITE_RESUME]:
     """Route cover letter feedback edge."""
     logger.debug("EDGE: route_cover_letter_feedback_edge")
     if state.cover_letter_feedback:
         return Node.WRITE_COVER_LETTER
-    return Node.END
+    return Node.WRITE_RESUME
 
 
 builder.add_edge(Node.START, Node.GET_JOB_REQUIREMENTS)
@@ -86,9 +89,9 @@ builder.add_edge(Node.WRITE_COVER_LETTER, Node.FEEDBACK)
 builder.add_conditional_edges(
     Node.FEEDBACK,
     route_cover_letter_feedback_edge,
-    [Node.WRITE_COVER_LETTER, Node.END],
+    [Node.WRITE_COVER_LETTER, Node.WRITE_RESUME],
 )
-
+builder.add_edge(Node.WRITE_RESUME, Node.END)
 
 # === GRAPH ===
 memory = MemorySaver()

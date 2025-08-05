@@ -5,6 +5,10 @@ alwaysApply: false
 
 - All agent nodes should be defined inside of the `nodes` module for an agent.
 - All nodes should include the appropriate input and output state type hints.
+- The node function should always be at the top of the file, followed by any supporting functions (if any).
+    - After the node and supporting functions, define the LangChain chain used by the node, starting with any prompt strings.
+    - Pydantic models used for structured outputs should come after any prompts and before calling get_model to get the LLM instance.
+    - The LangChain chain should be the last thing defined in the node file (if any).
 - Nodes should use the logger imported from `src/logging_config.py`.
     - All nodes should start by logging their name, in the form `logger.debug("NODE: {agent_name}.{node_name}")`.
     - If the node is not part of a sub-agent do not include the `{agent_name}.` portion of the name.
@@ -15,3 +19,4 @@ alwaysApply: false
     - Aside from converting between input and output state formats, these nodes should not contain any other logic.
 - If a node needs to request human feedback, it should do so by importing the appropriate dispatch function from `src/hitl.py`.
     - Place the dispatch as close to the top of the node as possible.
+- Make sure to add any newly create node the the `__all__` export in the `nodes` `__init__` file. The `nodes` module should export all the nodes it contains.

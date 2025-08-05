@@ -46,4 +46,10 @@
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "makefile.configureOnOpen": false,
+    "files.associations": {
+        "*.html": "jinja-html"
+    },
+    "emmet.includeLanguages": {
+        "jinja-html": "html"
+    }
 }
