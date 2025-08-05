@@ -13,6 +13,101 @@ from .state import get_main_input_state
 
 app = typer.Typer()
 
+# ---------------------------------------------------------------------------
+# User profile commands
+# ---------------------------------------------------------------------------
+user_app = typer.Typer(help="Manage user profile data.")
+app.add_typer(user_app, name="user")
+
+
+# NOTE: We import inside commands to avoid heavy dependencies at CLI startup.
+@user_app.command("show")
+def user_show() -> None:  # noqa: D401
+    """Display the stored user profile."""
+
+    from rich.pretty import pprint  # Lazy import
+
+    from .config import DATA_DIR
+    from .storage.FileStorage import FileStorage
+
+    storage = FileStorage(DATA_DIR)
+    profile = storage.get_user_profile()
+
+    if profile.is_empty:
+        typer.echo("No user profile found. Use 'agentic user set' to create one.")
+        return
+
+    pprint(profile.model_dump())
+
+
+@user_app.command("set")
+def user_set(
+    field: str = typer.Argument(..., help="Field to update: name, email, phone, linkedin_url"),
+    value: str = typer.Argument(..., help="New value for the field."),
+) -> None:  # noqa: D401
+    """Set or update a scalar field of the profile."""
+
+    from .config import DATA_DIR
+    from .storage.FileStorage import FileStorage
+
+    allowed = {"name", "email", "phone", "linkedin_url"}
+    if field not in allowed:
+        typer.echo(f"Unknown field '{field}'. Allowed fields: {', '.join(sorted(allowed))}.")
+        raise typer.Exit(code=1)
+
+    storage = FileStorage(DATA_DIR)
+    profile = storage.get_user_profile()
+    setattr(profile, field, value)
+    storage.save_user_profile(profile)
+    typer.echo(f"Updated {field}.")
+
+
+@user_app.command("add-education")
+def user_add_education(
+    degree: str = typer.Option(..., prompt=True),
+    major: str = typer.Option(..., prompt=True),
+    institution: str = typer.Option(..., prompt=True),
+    grad_date: str = typer.Option(..., prompt=True, help="Graduation date, e.g. 2024-05"),
+) -> None:  # noqa: D401
+    """Append an education entry to the profile."""
+
+    from .config import DATA_DIR
+    from .resume.types import Education
+    from .storage.FileStorage import FileStorage
+
+    storage = FileStorage(DATA_DIR)
+    profile = storage.get_user_profile()
+
+    profile.education.append(
+        Education(
+            degree=degree,
+            major=major,
+            institution=institution,
+            grad_date=grad_date,
+        )
+    )
+    storage.save_user_profile(profile)
+    typer.echo("Education added.")
+
+
+@user_app.command("add-cert")
+def user_add_certification(
+    title: str = typer.Option(..., prompt=True),
+    date: str = typer.Option(..., prompt=True, help="Date obtained, e.g. 2023-11"),
+) -> None:  # noqa: D401
+    """Append a certification entry to the profile."""
+
+    from .config import DATA_DIR
+    from .resume.types import Certification
+    from .storage.FileStorage import FileStorage
+
+    storage = FileStorage(DATA_DIR)
+    profile = storage.get_user_profile()
+
+    profile.certifications.append(Certification(title=title, date=date))
+    storage.save_user_profile(profile)
+    typer.echo("Certification added.")
+
 
 @app.command()
 def save_job(company_name: str) -> None:

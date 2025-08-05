@@ -1,8 +1,13 @@
+"""Aggregate user background information for the agent pipeline."""
+
+from __future__ import annotations
+
 from typing import List, TypedDict
 
 from pydantic.main import BaseModel
 
 from .FileStorage import FileStorage
+from .parse_experience import parse_experience_file
 from .parse_interview_questions import InterviewQuestion
 from .parse_motivations_and_interests import MotivationAndInterest
 
@@ -19,7 +24,7 @@ class Background(TypedDict):
 
 
 def get_background(storage: FileStorage) -> Background:
-    """Get the background.
+    """Return all persisted background information in a single object.
 
     This function reads the background from the file storage and returns it as a Background object.
 
@@ -30,10 +35,15 @@ def get_background(storage: FileStorage) -> Background:
         The background as a Background object.
     """
     experience: List[Experience] = []
-    titles = storage.list_experience()
-    for title in titles:
-        content = storage.get_experience(title)
-        experience.append(Experience(title=title.strip(".md"), content=content))
+    for filename in storage.list_experience():
+        raw_content = storage.get_experience(filename)
+        exp_meta, body = parse_experience_file(raw_content)
+        experience.append(
+            Experience(
+                title=exp_meta.title or filename.strip(".md"),
+                content=body,
+            )
+        )
 
     motivations_and_interests = storage.get_motivations_and_interests()
     interview_questions = storage.get_interview_questions()

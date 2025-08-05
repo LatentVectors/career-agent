@@ -3,8 +3,10 @@ globs: **/*.py
 alwaysApply: false
 ---
 
-# Python Coding Standards
+# General
 - This project uses Python 3.12. Follow best practices and coding standards for this version.
+- This project is in a Python virtual environment. Remember to activate the environment in `.venv` before executing commands that rely on Python.
+- This project uses pip and pyproject.toml. All dependencies should be declared in pyproject.toml.
 
 ## Type Annotations
 - **ALWAYS** include full type annotations for all function parameters and return types
