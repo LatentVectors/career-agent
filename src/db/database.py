@@ -62,7 +62,7 @@ class DatabaseClient:
         Yields:
             Database session
         """
-        with Session(self.engine) as session:
+        with Session(self.engine, expire_on_commit=False) as session:
             try:
                 yield session
                 session.commit()
@@ -79,7 +79,7 @@ class DatabaseClient:
         Returns:
             Database session
         """
-        return Session(self.engine)
+        return Session(self.engine, expire_on_commit=False)
 
 
 class Repository(Generic[T]):
@@ -186,7 +186,7 @@ class Repository(Generic[T]):
 
 
 class UserRepository(Repository[User]):
-    """Repository for Useroperations."""
+    """Repository for User operations."""
 
     def get_by_email(self, email: str) -> User | None:
         """Get a user by email.

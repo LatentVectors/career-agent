@@ -7,8 +7,8 @@ from typing import List, TypedDict
 
 from langsmith import Client
 from langsmith.schemas import ExampleCreate
+from src.db.database import db_manager
 from src.logging_config import logger
-from src.storage.database import db_manager
 
 from evals.datasets.utils import add_examples, verify_dataset
 

@@ -6,9 +6,9 @@ import tempfile
 import typer
 from langchain_core.runnables.config import RunnableConfig
 
+from .db.cli import db_app
 from .graph import GRAPH
 from .state import get_main_input_state
-from .storage.cli import db_app
 
 app = typer.Typer()
 
@@ -63,9 +63,9 @@ def chat(
 
     from .callbacks import LoggingCallbackHandler
     from .config import CASSETTE_DIR, DATA_DIR
+    from .db import db_manager
     from .graph import stream_agent
     from .logging_config import logger
-    from .storage import db_manager
     from .utils import serialize_state
 
     vcr = VCR(
@@ -119,6 +119,7 @@ def chat(
         print(f"Job: {selected_company.name}")
 
         # Get user data for the session
+        # TODO: This need to be passed to the input state.
         user_education = db_manager.educations.get_by_user_id(user_id)
         user_certifications = db_manager.certifications.get_by_user_id(user_id)
         user_experience = db_manager.experiences.get_by_user_id(user_id)

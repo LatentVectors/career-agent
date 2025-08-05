@@ -5,8 +5,8 @@ from __future__ import annotations
 import datetime
 
 import pytest
-from src.storage.database import DatabaseManager
-from src.storage.models import (
+from src.db.database import DatabaseManager
+from src.db.models import (
     CandidateResponse,
     Certification,
     Comment,

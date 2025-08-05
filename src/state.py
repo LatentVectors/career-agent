@@ -4,7 +4,7 @@ from typing import Annotated, Dict, List, Optional, TypedDict
 
 from pydantic import BaseModel
 
-from src.storage.models import CandidateResponse, Experience, JobPosting
+from src.db.models import CandidateResponse, Experience, JobPosting
 
 
 def dict_reducer(a: Optional[dict], b: Optional[dict]) -> dict:

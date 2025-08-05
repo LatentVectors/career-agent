@@ -2,8 +2,8 @@ from typing import TypedDict
 
 from pydantic import BaseModel
 
+from src.db.models import CandidateResponse
 from src.schemas import JobRequirements, RequirementSummary
-from src.storage.models import CandidateResponse
 
 
 class InputState(BaseModel):

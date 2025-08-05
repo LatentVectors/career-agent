@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from src.storage.database import DatabaseManager
-from src.storage.models import User
+from src.db.database import DatabaseManager
+from src.db.models import User
 
 
 def test_simple_database_operations() -> None:
