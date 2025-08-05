@@ -2,7 +2,7 @@ from typing import TypedDict
 
 from pydantic import BaseModel
 
-from src.types import CandidateResponse, JobRequirements, RequirementSummary
+from src.schemas import CandidateResponse, JobRequirements, RequirementSummary
 
 
 class InputState(BaseModel):

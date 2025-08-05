@@ -1,7 +1,8 @@
 from pathlib import Path
 
 import pytest
-from src.storage.parse_job import Job, format_job, parse_job
+from src.schemas import Job
+from src.storage.parse_job import format_job, parse_job
 
 
 class TestParseJob:

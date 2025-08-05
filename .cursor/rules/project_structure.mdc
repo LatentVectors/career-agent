@@ -32,6 +32,7 @@ The main agent is responsible for orchestrating the full "help me get a job" wor
   * `get_feedback.py` – human-in-the-loop node that routes back into the graph when revisions are requested.
   * `tool_node.py`, `chatbot.py`, etc. – generic or utility nodes.
   New nodes should live here and be imported/re-exported in `nodes/__init__.py` for easy wildcard import.
+* `schemas/` - Project wide data schemas using Pydantic or TypedDicts. This includes any data read from disk, or shared project wide.
 * `storage/` – Reading / writing data on disk.  Golden rule: **no business logic** – only serialization, parsing, or simple transforms.
   * `FileStorage.py` – Generic JSON file persistence.
   * `parse_job.py`, `parse_interview_questions.py`, `parse_motivations_and_interests.py`, `get_background.py` – translate raw files into typed domain objects.

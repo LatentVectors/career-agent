@@ -1,12 +1,7 @@
 import re
 from typing import List
 
-from pydantic import BaseModel
-
-
-class MotivationAndInterest(BaseModel):
-    question: str
-    answer: str
+from src.schemas import MotivationAndInterest
 
 
 def parse_motivations_and_interests(content: str) -> List[MotivationAndInterest]:

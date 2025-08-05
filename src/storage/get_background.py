@@ -2,25 +2,12 @@
 
 from __future__ import annotations
 
-from typing import List, TypedDict
+from typing import List
 
-from pydantic.main import BaseModel
+from src.schemas import Background, BackgroundExperience
 
 from .FileStorage import FileStorage
 from .parse_experience import parse_experience_file
-from .parse_interview_questions import InterviewQuestion
-from .parse_motivations_and_interests import MotivationAndInterest
-
-
-class Experience(BaseModel):
-    title: str
-    content: str
-
-
-class Background(TypedDict):
-    experience: List[Experience]
-    motivations_and_interests: List[MotivationAndInterest]
-    interview_questions: List[InterviewQuestion]
 
 
 def get_background(storage: FileStorage) -> Background:
@@ -34,12 +21,12 @@ def get_background(storage: FileStorage) -> Background:
     Returns:
         The background as a Background object.
     """
-    experience: List[Experience] = []
+    experience: List[BackgroundExperience] = []
     for filename in storage.list_experience():
         raw_content = storage.get_experience(filename)
         exp_meta, body = parse_experience_file(raw_content)
         experience.append(
-            Experience(
+            BackgroundExperience(
                 title=exp_meta.title or filename.strip(".md"),
                 content=body,
             )

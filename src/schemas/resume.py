@@ -3,9 +3,6 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 
-# I need to get the users name, email, phone, linkedin_url, education, and certifications.
-# professional_summary, experience, and skills should all come from generated content.
-# I need to enhance past experience with predefined metadata.
 class ResumeData(BaseModel):
     """Complete resume data structure."""
 

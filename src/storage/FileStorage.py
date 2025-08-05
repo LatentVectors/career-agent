@@ -12,12 +12,18 @@ import json
 from pathlib import Path
 from typing import List
 
-from src.resume.types import Experience, UserProfile
+from src.schemas import (
+    InterviewQuestion,
+    Job,
+    MotivationAndInterest,
+    ResumeExperience,
+    UserProfile,
+)
 from src.storage.parse_experience import format_experience, parse_experience_file
-from src.storage.parse_job import Job, format_job, parse_job
+from src.storage.parse_job import format_job, parse_job
 
-from .parse_interview_questions import InterviewQuestion, parse_interview_questions
-from .parse_motivations_and_interests import MotivationAndInterest, parse_motivations_and_interests
+from .parse_interview_questions import parse_interview_questions
+from .parse_motivations_and_interests import parse_motivations_and_interests
 
 
 class FileStorage:  # noqa: D101 – docstring below
@@ -50,7 +56,9 @@ class FileStorage:  # noqa: D101 – docstring below
         """List all experiences in the file storage."""
         return [f.name for f in self._experience_dir.glob("*.md")]
 
-    def save_experience(self, experience_or_filename: Experience | str, content: str) -> None:  # noqa: D401
+    def save_experience(
+        self, experience_or_filename: ResumeExperience | str, content: str
+    ) -> None:  # noqa: D401
         """Save an experience.
 
         Backwards-compatibility: When *experience_or_filename* is a string we
@@ -59,7 +67,7 @@ class FileStorage:  # noqa: D101 – docstring below
         writing the file so that structured metadata is preserved.
         """
 
-        if isinstance(experience_or_filename, Experience):
+        if isinstance(experience_or_filename, ResumeExperience):
             exp = experience_or_filename
             filename = f"{exp.title}.md"
             formatted = format_experience(exp, content)
@@ -87,7 +95,7 @@ class FileStorage:  # noqa: D101 – docstring below
         return filepath.read_text()
 
     # High-level convenience: parse experience and return model -------------
-    def get_experience_metadata(self, filename: str) -> Experience:
+    def get_experience_metadata(self, filename: str) -> ResumeExperience:
         """Return the :class:`Experience` metadata embedded in *filename*."""
 
         content = self.get_experience(filename)

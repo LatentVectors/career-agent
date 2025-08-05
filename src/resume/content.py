@@ -1,4 +1,4 @@
-from .types import Certification, Education, Experience, ResumeData
+from ..schemas import Certification, Education, Experience, ResumeData
 
 DUMMY_RESUME_DATA: dict[str, ResumeData] = {
     "ai_agent_developer": ResumeData(

@@ -72,7 +72,7 @@ def user_add_education(
     """Append an education entry to the profile."""
 
     from .config import DATA_DIR
-    from .resume.types import Education
+    from .schemas import Education
     from .storage.FileStorage import FileStorage
 
     storage = FileStorage(DATA_DIR)
@@ -98,7 +98,7 @@ def user_add_certification(
     """Append a certification entry to the profile."""
 
     from .config import DATA_DIR
-    from .resume.types import Certification
+    from .schemas import Certification
     from .storage.FileStorage import FileStorage
 
     storage = FileStorage(DATA_DIR)
@@ -113,8 +113,8 @@ def user_add_certification(
 def save_job(company_name: str) -> None:
     """Save a job to the file storage."""
     from .config import DATA_DIR
+    from .schemas import Job
     from .storage.FileStorage import FileStorage
-    from .storage.parse_job import Job
 
     job = Job(
         company_name=company_name.strip(),

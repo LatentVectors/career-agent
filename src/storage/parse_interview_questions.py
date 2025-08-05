@@ -1,16 +1,7 @@
 import re
 from typing import List, Optional
 
-from pydantic import BaseModel
-
-
-class InterviewQuestion(BaseModel):
-    question: str
-    category: Optional[str] = None
-    answer: Optional[str] = None
-    motivation: Optional[str] = None
-    guidance: Optional[str] = None
-    notes: Optional[str] = None
+from src.schemas import InterviewQuestion
 
 
 def parse_interview_questions(content: str) -> List[InterviewQuestion]:

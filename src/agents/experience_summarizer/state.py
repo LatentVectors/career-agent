@@ -4,7 +4,7 @@ from typing import List, TypedDict
 
 from pydantic import BaseModel
 
-from src.types import JobRequirements
+from src.schemas import JobRequirements
 
 
 class InputState(BaseModel):

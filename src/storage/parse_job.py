@@ -1,18 +1,6 @@
 import re
-from typing import List, Optional
 
-from pydantic import BaseModel
-
-
-class Job(BaseModel):
-    company_name: str
-    description: str
-    company_website: Optional[str] = None
-    company_email: Optional[str] = None
-    company_overview: Optional[str] = None
-    parsed_requirements: Optional[List[str]] = None
-    my_interest: Optional[str] = None
-    cover_letter: Optional[str] = None
+from src.schemas import Job
 
 
 def parse_job(content: str) -> Job:
@@ -57,7 +45,6 @@ def parse_job(content: str) -> Job:
         header = lines[0].strip()
         content_text = lines[1].strip()
 
-        requirements = []
         # Map header to field name
         if header in field_mappings:
             field_name = field_mappings[header]
@@ -65,6 +52,7 @@ def parse_job(content: str) -> Job:
             # Special handling for parsed_requirements
             if field_name == "parsed_requirements":
                 # Extract requirements from lines starting with "-"
+                requirements = []
                 for line in content_text.split("\n"):
                     line = line.strip()
                     if line.startswith("-"):
@@ -72,6 +60,9 @@ def parse_job(content: str) -> Job:
                         requirement = line[1:].strip()
                         if requirement:  # Only add non-empty requirements
                             requirements.append(requirement)
+                # Only set requirements if we found any, otherwise leave as None
+                if requirements:
+                    field_values[field_name] = requirements
             else:
                 field_values[field_name] = content_text
 
@@ -89,7 +80,7 @@ def parse_job(content: str) -> Job:
         company_website=field_values.get("company_website"),
         company_email=field_values.get("company_email"),
         company_overview=field_values.get("company_overview"),
-        parsed_requirements=requirements,
+        parsed_requirements=field_values.get("parsed_requirements"),
         my_interest=field_values.get("my_interest"),
         cover_letter=field_values.get("cover_letter"),
     )

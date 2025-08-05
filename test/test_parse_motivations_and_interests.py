@@ -1,10 +1,8 @@
 from pathlib import Path
 
 import pytest
-from src.storage.parse_motivations_and_interests import (
-    MotivationAndInterest,
-    parse_motivations_and_interests,
-)
+from src.schemas import MotivationAndInterest
+from src.storage.parse_motivations_and_interests import parse_motivations_and_interests
 
 
 def test_parse_motivations_and_interests():

@@ -1,7 +1,7 @@
 """Unit tests for parse_experience module."""
 
 import pytest
-from src.resume.types import Experience
+from src.schemas import ResumeExperience
 from src.storage.parse_experience import format_experience, parse_experience_file
 
 
@@ -31,7 +31,7 @@ It can contain multiple paragraphs and markdown formatting.
 
         exp, body = parse_experience_file(content)
 
-        assert isinstance(exp, Experience)
+        assert isinstance(exp, ResumeExperience)
         assert exp.title == "Senior Software Engineer"
         assert exp.company == "TechCorp Inc."
         assert exp.location == "San Francisco, CA"
@@ -76,7 +76,7 @@ This is the body content."""
 
         exp, body = parse_experience_file(content)
 
-        assert isinstance(exp, Experience)
+        assert isinstance(exp, ResumeExperience)
         assert exp.title == ""
         assert exp.company == ""
         assert exp.location == ""
@@ -97,7 +97,7 @@ This is the body content."""
 
         exp, body = parse_experience_file(content)
 
-        assert isinstance(exp, Experience)
+        assert isinstance(exp, ResumeExperience)
         assert exp.title == "Junior Developer"
         assert exp.company == "StartupXYZ"
         assert exp.location == ""
@@ -149,7 +149,7 @@ points:
 
         exp, body = parse_experience_file(content)
 
-        assert isinstance(exp, Experience)
+        assert isinstance(exp, ResumeExperience)
         assert exp.title == "Senior Developer"
         assert exp.company == "TechCorp"
         assert exp.location == "Remote"
@@ -194,7 +194,7 @@ points:
 
         exp, body = parse_experience_file(content)
 
-        assert isinstance(exp, Experience)
+        assert isinstance(exp, ResumeExperience)
         assert exp.title == "Full Stack Developer"
         assert exp.company == "WebCorp"
         assert exp.location == "New York, NY"
@@ -217,7 +217,7 @@ class TestFormatExperience:
 
     def test_format_experience_with_all_fields(self) -> None:
         """Test formatting an experience with all fields populated."""
-        exp = Experience(
+        exp = ResumeExperience(
             title="Senior Software Engineer",
             company="TechCorp Inc.",
             location="San Francisco, CA",
@@ -264,7 +264,7 @@ It can contain multiple paragraphs and markdown formatting.
 
     def test_format_experience_with_minimal_fields(self) -> None:
         """Test formatting an experience with minimal fields."""
-        exp = Experience(
+        exp = ResumeExperience(
             title="Junior Developer",
             company="StartupXYZ",
             location="",
@@ -289,7 +289,7 @@ It can contain multiple paragraphs and markdown formatting.
 
     def test_format_experience_roundtrip(self) -> None:
         """Test that format_experience and parse_experience_file work together."""
-        original_exp = Experience(
+        original_exp = ResumeExperience(
             title="Full Stack Developer",
             company="WebCorp",
             location="Remote",
@@ -328,7 +328,7 @@ It can contain multiple paragraphs and markdown formatting.
 
     def test_format_experience_with_special_characters(self) -> None:
         """Test formatting an experience with special characters in content."""
-        exp = Experience(
+        exp = ResumeExperience(
             title="DevOps Engineer",
             company="CloudCorp & Partners",
             location="Austin, TX",
@@ -370,7 +370,7 @@ It can contain multiple paragraphs and markdown formatting.
 
     def test_format_experience_with_empty_body(self) -> None:
         """Test formatting an experience with empty body."""
-        exp = Experience(
+        exp = ResumeExperience(
             title="Intern",
             company="TechStartup",
             location="Boston, MA",

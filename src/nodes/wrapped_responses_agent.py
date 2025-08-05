@@ -1,5 +1,4 @@
-from src.storage.parse_motivations_and_interests import MotivationAndInterest
-from src.types import CandidateResponse
+from src.schemas import CandidateResponse, MotivationAndInterest
 
 from ..agents.responses_summarizer import (
     InputState,

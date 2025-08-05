@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from src.logging_config import logger
 from src.models import OpenAIModels, get_model
-from src.types import RequirementSummary
+from src.schemas import RequirementSummary
 
 from ..state import InternalState, PartialInternalState
 

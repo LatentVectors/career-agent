@@ -8,10 +8,10 @@ from typing import Tuple
 import frontmatter  # type: ignore[import-untyped]
 from pydantic import ValidationError
 
-from src.resume.types import Experience
+from src.schemas import ResumeExperience
 
 
-def parse_experience_file(text: str) -> Tuple[Experience, str]:
+def parse_experience_file(text: str) -> Tuple[ResumeExperience, str]:
     """Parse a Markdown experience file into (``Experience``, body).
 
     The input **must** start with a valid YAML front-matter block delimited by
@@ -56,14 +56,14 @@ def parse_experience_file(text: str) -> Tuple[Experience, str]:
     # 4. Validate against the Experience schema
     # ------------------------------------------------------------------
     try:
-        exp = Experience.model_validate(data)
+        exp = ResumeExperience.model_validate(data)
     except ValidationError as exc:  # pragma: no cover – easier debugging
         raise ValueError("Experience metadata failed validation") from exc
 
     return exp, post.content
 
 
-def format_experience(exp: Experience, body: str) -> str:
+def format_experience(exp: ResumeExperience, body: str) -> str:
     """Render an :class:`Experience` plus *body* into a Markdown string."""
 
     # Only include non-empty fields in the YAML
@@ -109,11 +109,11 @@ def format_experience(exp: Experience, body: str) -> str:
 # Convenience helpers -------------------------------------------------------
 
 
-def read_experience_file(path: Path) -> Tuple[Experience, str]:
+def read_experience_file(path: Path) -> Tuple[ResumeExperience, str]:
     text = path.read_text()
     return parse_experience_file(text)
 
 
-def write_experience_file(path: Path, exp: Experience, body: str) -> None:
+def write_experience_file(path: Path, exp: ResumeExperience, body: str) -> None:
     formatted = format_experience(exp, body)
     path.write_text(formatted)
