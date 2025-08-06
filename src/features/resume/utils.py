@@ -94,7 +94,7 @@ def convert_html_to_pdf(
         # Generate PDF
         html_doc.write_pdf(str(output_path), stylesheets=css_docs)
 
-        logger.info(f"PDF generated successfully: {output_path}")
+        logger.debug(f"PDF generated successfully: {output_path}")
         return output_path
 
     except Exception:
@@ -152,7 +152,7 @@ def get_pdf_page_count(pdf_path: str | Path) -> int:
             reader = PdfReader(file)
             page_count = len(reader.pages)
 
-        logger.info(f"PDF page count: {page_count} pages in {pdf_path}")
+        logger.debug(f"PDF page count: {page_count} pages in {pdf_path}")
         return page_count
 
     except Exception:
@@ -179,7 +179,7 @@ def get_pdf_file_size(pdf_path: str | Path) -> int:
             raise FileNotFoundError(f"PDF file not found: {pdf_path}")
 
         file_size = pdf_path.stat().st_size
-        logger.info(f"PDF file size: {file_size} bytes for {pdf_path}")
+        logger.debug(f"PDF file size: {file_size} bytes for {pdf_path}")
         return file_size
 
     except Exception:
@@ -219,7 +219,7 @@ def get_pdf_info(pdf_path: str | Path) -> Dict[str, Any]:
             "path": str(pdf_path),
         }
 
-        logger.info(f"PDF info retrieved: {info}")
+        logger.debug(f"PDF info retrieved: {info}")
         return info
 
     except Exception:
@@ -246,7 +246,7 @@ def list_available_templates(templates_dir: str | Path) -> list[str]:
             f.name for f in templates_path.iterdir() if f.is_file() and f.suffix.lower() == ".html"
         ]
 
-        logger.info(f"Found {len(templates)} templates in {templates_path}")
+        logger.debug(f"Found {len(templates)} templates in {templates_path}")
         return sorted(templates)
 
     except Exception:
