@@ -29,13 +29,27 @@ The main agent is responsible for orchestrating the full "help me get a job" wor
   * `job_requirements.py` – extracts numbered requirements from the job description.
   * `wrapped_experience_agent.py` / `wrapped_responses_agent.py` – thin adapters that call the respective sub-agents and merge their output back into `MainState`.
   * `write_cover_letter.py` – composes the final cover letter from accumulated summaries.
+  * `write_resume.py` – generates resume content using the resume feature module.
   * `get_feedback.py` – human-in-the-loop node that routes back into the graph when revisions are requested.
-  * `tool_node.py`, `chatbot.py`, etc. – generic or utility nodes.
+  * `tool_node.py` – generic or utility nodes.
   New nodes should live here and be imported/re-exported in `nodes/__init__.py` for easy wildcard import.
 * `schemas/` - Project wide data schemas using Pydantic or TypedDicts. This includes any data read from disk, or shared project wide.
-* `storage/` – Reading / writing data on disk.  Golden rule: **no business logic** – only serialization, parsing, or simple transforms.
-  * `FileStorage.py` – Generic JSON file persistence.
-  * `parse_job.py`, `parse_interview_questions.py`, `parse_motivations_and_interests.py`, `get_background.py` – translate raw files into typed domain objects.
+* `db/` – Database models and CRUD operations for persistent data storage.
+  * `models.py` – SQLAlchemy model definitions for database tables.
+  * `database.py` – Database connection and session management.
+  * `cli_crud.py` – Command-line CRUD operations for database entities.
+  * `cli_io.py` – File I/O operations for importing/exporting data.
+* `features/` – Feature-specific modules that provide specialized functionality.
+  * `resume/` – Resume generation and management functionality.
+    * `content.py` – Core resume content generation logic.
+    * `prompt.py` – Resume-specific prompts and templates.
+    * `types.py` – Resume-related data types and schemas.
+    * `utils.py` – Resume utility functions.
+    * `cli.py` – Resume-specific command-line operations.
+    * `templates/` – HTML resume templates.
+* `agents/` – Self-contained sub-agents that solve specific sub-tasks.
+  * `experience_summarizer/` – Agent for summarizing work experience.
+  * `responses_summarizer/` – Agent for summarizing interview responses.
 * `models.py` – Central place to list LLM model names and a `get_model()` helper so that switching models only requires editing one file.
 * `cli.py` – Typer entry-points (`graph`, `chat`, `save_job`, etc.).  Anything runnable from the command line belongs here, **not** in random scripts.
 * `config.py` – Static configuration (data paths, environment toggles).

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 from jinja2 import TemplateError, TemplateNotFound
-from src.resume.utils import (
+from src.features.resume.utils import (
     convert_html_to_pdf,
     get_pdf_file_size,
     get_pdf_info,
