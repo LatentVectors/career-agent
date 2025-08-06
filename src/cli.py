@@ -6,7 +6,8 @@ import tempfile
 import typer
 from langchain_core.runnables.config import RunnableConfig
 
-from .db.cli import db_app
+from .db.cli_crud import db_app
+from .db.cli_io import dump_app, load_app
 from .graph import GRAPH
 from .state import get_main_input_state
 
@@ -14,6 +15,10 @@ app = typer.Typer()
 
 # Add database commands
 app.add_typer(db_app, name="db")
+
+# Add I/O commands
+app.add_typer(dump_app, name="dump")
+app.add_typer(load_app, name="load")
 
 
 @app.command()
