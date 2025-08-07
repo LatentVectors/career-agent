@@ -2,6 +2,8 @@ from enum import StrEnum
 
 from langgraph.graph import END, START, StateGraph
 
+from src.context import AgentContext
+
 from .nodes.summarize import summarize
 from .state import InputState, InternalState, OutputState
 
@@ -9,6 +11,7 @@ builder = StateGraph(
     InternalState,
     input_schema=InputState,
     output_schema=OutputState,
+    context_schema=AgentContext,
 )
 
 

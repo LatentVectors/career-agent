@@ -4,8 +4,6 @@ from typing import Annotated, Dict, List, Optional, TypedDict
 
 from pydantic import BaseModel
 
-from src.db.models import CandidateResponse, Experience, JobPosting
-
 
 def dict_reducer(a: Optional[dict], b: Optional[dict]) -> dict:
     """Reduce a dictionary using keys to merge the values."""
@@ -20,9 +18,7 @@ class InputState(BaseModel):
     """Main input state."""
 
     job_description: str
-    experience: List[Experience]
-    motivations_and_interests: List[CandidateResponse]
-    interview_questions: List[CandidateResponse]
+    experience_ids: List[int]
 
 
 class OutputState(BaseModel):
@@ -47,11 +43,8 @@ class OutputState(BaseModel):
 class InternalState(InputState, OutputState, BaseModel):
     """State."""
 
-    current_experience_title: str | None = None
-    """The title of the current experience."""
-
-    current_experience: str | None = None
-    """The current experience."""
+    current_experience_id: int | None = None
+    """The identifier of the current experience being processed."""
 
     job_requirements: Dict[int, str] = {}
     """Extracted job requirements."""
@@ -80,12 +73,8 @@ class PartialInternalState(TypedDict, total=False):
     """Partial state for return types."""
 
     job_description: str | None
-    experience: List[Experience] | None
-    motivations_and_interests: List[CandidateResponse] | None
-    interview_questions: List[CandidateResponse] | None
-    experience_summary: str | None
-    current_experience: str | None
-    current_experience_title: str | None
+    experience_ids: List[int] | None
+    current_experience_id: int | None
     job_requirements: Dict[int, str] | None
     cover_letter: str | None
     resume: str | None
@@ -95,18 +84,3 @@ class PartialInternalState(TypedDict, total=False):
     summarized_experience: Dict[str, List[Summary]] | None
     summarized_responses: Dict[str, List[Summary]] | None
     cover_letter_feedback: str | None
-
-
-def get_main_input_state(
-    job: JobPosting,
-    motivations_and_interests: List[CandidateResponse],
-    interview_questions: List[CandidateResponse],
-    experience: List[Experience],
-) -> InputState:
-    """Get the state."""
-    return InternalState(
-        job_description=job.description,
-        motivations_and_interests=motivations_and_interests,
-        interview_questions=interview_questions,
-        experience=experience,
-    )

@@ -1,9 +1,11 @@
 from typing import List
 
 from langchain_core.prompts.chat import ChatPromptTemplate
+from langgraph.runtime import Runtime
 from openai import APIConnectionError
 from pydantic import BaseModel, Field
 
+from src.context import AgentContext
 from src.logging_config import logger
 from src.models import OpenAIModels, get_model
 
@@ -14,7 +16,10 @@ class JobRequirements(BaseModel):
     requirements: List[str] = Field(description="A list of requirements for the job.")
 
 
-def get_job_requirements(state: InternalState) -> PartialInternalState:
+def job_requirements(
+    state: InternalState,
+    runtime: Runtime[AgentContext],
+) -> PartialInternalState:
     """Extract job requirements from a job description."""
     logger.debug("NODE: get_job_requirements")
     logger.debug(f"State Type: {type(state)}")

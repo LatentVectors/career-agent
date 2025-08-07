@@ -3,44 +3,55 @@ from __future__ import annotations
 from typing import List
 
 from langchain_core.prompts import ChatPromptTemplate
+from langgraph.runtime import Runtime
 from pydantic import BaseModel, Field
 
+from src.context import AgentContext
+from src.db import db_manager
 from src.logging_config import logger
 from src.models import OpenAIModels, get_model
 
 from ..state import ExperienceSummary, InternalState, PartialInternalState
 
 
-def summarize(state: InternalState) -> PartialInternalState:
-    """Summarize the work experience."""
+def summarize(
+    state: InternalState,
+    runtime: Runtime[AgentContext],
+) -> PartialInternalState:
+    """Fetch the relevant experience from the DB and generate requirement-aligned summaries."""
     logger.debug("NODE: experience_summarizer.summarize")
+
     requirements = state.job_requirements
-    if requirements is None or len(requirements) == 0:
+    if not requirements:
         logger.warning("No job requirements found. Returning empty summary.")
         return PartialInternalState(summary=[])
-    try:
-        job_requirements = ""
-        for key, value in requirements.items():
-            job_requirements += f"{key}) {value}\n"
-        experience = state.experience
-        response = chain.invoke(
-            {
-                "job_requirements": job_requirements,
-                "experience": experience,
-                "output_example": output_example,
-            }
-        )
-        validated = Summary.model_validate(response).experience_summaries
-        summary: List[ExperienceSummary] = [
-            ExperienceSummary(requirement=v.requirement, summary=v.summary) for v in validated
-        ]
-        if len(summary) == 0:
-            logger.debug("No summaries found. Returning empty summary.")
-            return PartialInternalState(summary=None)
-        return PartialInternalState(summary=summary)
-    except Exception as e:
-        logger.exception(f"Error summarizing experience: {e}")
-        raise e
+
+    # Fetch the experience record on-demand.
+    exp_id = state.experience_id  # type: ignore[attr-defined]
+    experience_record = db_manager.experiences.get_by_id(exp_id) if exp_id is not None else None
+    if experience_record is None or not experience_record.content:
+        logger.warning("Experience record not found or empty. Returning empty summary.")
+        return PartialInternalState(summary=[])
+
+    # Prepare prompt inputs
+    formatted_requirements = "".join(f"{k}) {v}\n" for k, v in requirements.items())
+    response = chain.invoke(
+        {
+            "job_requirements": formatted_requirements,
+            "experience": experience_record.content,
+            "output_example": output_example,
+        }
+    )
+
+    validated = Summary.model_validate(response).experience_summaries
+    summary: List[ExperienceSummary] = [
+        ExperienceSummary(requirement=v.requirement, summary=v.summary) for v in validated
+    ]
+    if len(summary) == 0:
+        logger.debug("No summaries found. Returning empty summary.")
+        return PartialInternalState(summary=[])
+
+    return PartialInternalState(summary=summary)
 
 
 class Summary(BaseModel):

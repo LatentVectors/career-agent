@@ -1,3 +1,7 @@
+from langgraph.runtime import Runtime
+
+from src.context import AgentContext
+
 from ..agents.responses_summarizer import (
     InputState,
     OutputState,
@@ -7,31 +11,33 @@ from ..logging_config import logger
 from ..state import InternalState, PartialInternalState, Summary
 
 
-def wrapped_responses_agent(state: InternalState) -> PartialInternalState:
-    """Wrapped responses agent."""
+def wrapped_responses_agent(
+    state: InternalState,
+    runtime: Runtime[AgentContext],
+) -> PartialInternalState:
+    """Summarize candidate responses on-demand using the responses_summarizer sub-agent."""
     logger.debug("NODE: wrapped_responses_agent")
-    motivations_and_interests = state.motivations_and_interests
-    if not motivations_and_interests:
-        logger.debug("No motivations and interests found. Returning empty summary.")
-        return PartialInternalState(summarized_responses={})
 
     job_requirements = state.job_requirements
     if not job_requirements:
         raise ValueError("Job requirements are required")
+
     result = responses_agent.invoke(
         InputState(
-            responses=motivations_and_interests,
             job_requirements=job_requirements,
-            source="responses",
-        )
+            source="candidate_responses",
+        ),
+        context=runtime.context,
     )
+
     validated = OutputState.model_validate(result)
     if len(validated.summaries) == 0:
         logger.debug("No summaries found. Returning empty summary.")
         return PartialInternalState(summarized_responses={})
+
     return PartialInternalState(
         summarized_responses={
-            "motivations_and_interests": [
+            "candidate_responses": [
                 Summary(
                     requirements=summary.requirements,
                     summary=summary.summary,

@@ -2,7 +2,6 @@ from typing import TypedDict
 
 from pydantic import BaseModel
 
-from src.db.models import CandidateResponse
 from src.schemas import JobRequirements, RequirementSummary
 
 
@@ -10,10 +9,7 @@ class InputState(BaseModel):
     """Input state for the responses summarizer."""
 
     source: str
-    """The source of the responses."""
-
-    responses: list[CandidateResponse]
-    """A list of responses from the candidate."""
+    """Label identifying the origin of the responses (e.g., 'candidate_responses')."""
 
     job_requirements: JobRequirements
     """The job requirements."""
@@ -34,6 +30,5 @@ class InternalState(InputState, OutputState, BaseModel):
 
 class PartialInternalState(TypedDict, total=False):
     source: str | None
-    responses: list[CandidateResponse] | None
     job_requirements: JobRequirements | None
     summaries: list[RequirementSummary] | None

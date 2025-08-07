@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from langchain_core.prompts import ChatPromptTemplate
+from langgraph.runtime import Runtime
 from pydantic import BaseModel, Field
 
+from src.context import AgentContext
+from src.db import db_manager
 from src.logging_config import logger
 from src.models import OpenAIModels, get_model
 from src.schemas import RequirementSummary
@@ -10,23 +13,29 @@ from src.schemas import RequirementSummary
 from ..state import InternalState, PartialInternalState
 
 
-def summarize(state: InternalState) -> PartialInternalState:
-    """Summarize the responses."""
+def summarize(
+    state: InternalState,
+    runtime: Runtime[AgentContext],
+) -> PartialInternalState:
+    """Summarize candidate responses by aligning them to job requirements."""
     logger.debug("NODE: responses_summarizer.summarize")
-    responses = state.responses
+
     job_requirements = state.job_requirements
-    if not responses or not job_requirements:
-        logger.warning("No responses or job requirements provided.")
+    if not job_requirements:
+        logger.warning("No job requirements provided.")
         return PartialInternalState(summaries=[])
 
-    formatted_responses = ""
-    for response in responses:
-        formatted_responses += (
-            f"[Prompt]: {response.prompt}\n[CandidateResponse]: {response.response}\n\n"
-        )
-    formatted_job_requirements = ""
-    for key, value in job_requirements.items():
-        formatted_job_requirements += f"{key}) {value}\n"
+    # Fetch all candidate responses for the current user.
+    user_id = runtime.context.user_id
+    responses = db_manager.candidate_responses.get_by_user_id(user_id)
+    if not responses:
+        logger.warning("No candidate responses found for user. Returning empty summary.")
+        return PartialInternalState(summaries=[])
+
+    formatted_responses = "".join(
+        f"[Prompt]: {r.prompt}\n[CandidateResponse]: {r.response}\n\n" for r in responses
+    )
+    formatted_job_requirements = "".join(f"{k}) {v}\n" for k, v in job_requirements.items())
 
     result = chain.invoke(
         {
@@ -40,7 +49,7 @@ def summarize(state: InternalState) -> PartialInternalState:
     return PartialInternalState(
         summaries=[
             RequirementSummary(
-                source=source if source else "NA",
+                source=source if source else "candidate_responses",
                 requirements=summary.requirements,
                 summary=summary.summary,
             )

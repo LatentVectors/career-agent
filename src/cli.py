@@ -6,11 +6,12 @@ import tempfile
 import typer
 from langchain_core.runnables.config import RunnableConfig
 
+from .context import AgentContext
 from .db.cli_crud import db_app
 from .db.cli_io import dump_app, load_app
 from .features.resume import resume_app
 from .graph import GRAPH
-from .state import get_main_input_state
+from .state import InputState
 
 app = typer.Typer()
 
@@ -90,55 +91,44 @@ def chat(
             typer.echo(f"No user found with ID {user_id}.")
             raise typer.Exit(code=1)
 
-        # Get all companies with job postings
-        companies = db_manager.companies.get_all()
-        if not companies:
-            print("No companies found")
+        # Get all job postings
+        job_postings = db_manager.job_postings.get_all()
+        if not job_postings:
+            print("No job postings found")
             return
 
-        # Show available companies
-        print("Available companies:")
-        for i, company in enumerate(companies, 1):
-            print(f"{i}. {company.name}")
+        # Show available job postings
+        print("Available job postings:")
+        for i, job in enumerate(job_postings, 1):
+            company_name = "Unknown Company"
+            if job.company_id:
+                company = db_manager.companies.get_by_id(job.company_id)
+                if company:
+                    company_name = company.name
+            print(f"{i}. {job.title} at {company_name}")
 
-        # Let user select company
-        company_choice = Prompt.ask(
-            "Select a company", choices=[str(i) for i in range(1, len(companies) + 1)]
+        # Let user select job posting
+        job_choice = Prompt.ask(
+            "Select a job posting", choices=[str(i) for i in range(1, len(job_postings) + 1)]
         )
-        selected_company = companies[int(company_choice) - 1]
+        selected_job = job_postings[int(job_choice) - 1]
 
-        # Get job postings for the selected company
-        jobs = db_manager.job_postings.get_by_company_id(selected_company.id)
-        if not jobs:
-            print(f"No job postings found for {selected_company.name}")
-            return
+        # Get company name for display
+        company_name = "Unknown Company"
+        if selected_job.company_id:
+            company = db_manager.companies.get_by_id(selected_job.company_id)
+            if company:
+                company_name = company.name
 
-        # If multiple jobs, let user select one
-        if len(jobs) > 1:
-            print(f"Available jobs for {selected_company.name}:")
-            for i, job in enumerate(jobs, 1):
-                print(f"{i}. Job posting {job.id}")
-            job_choice = Prompt.ask(
-                "Select a job", choices=[str(i) for i in range(1, len(jobs) + 1)]
-            )
-            selected_job = jobs[int(job_choice) - 1]
-        else:
-            selected_job = jobs[0]
+        print(f"Selected: {selected_job.title} at {company_name}")
 
-        print(f"Job: {selected_company.name}")
+        # Build runtime context for the graph execution
+        ctx = AgentContext(user_id=user_id, job_posting_id=selected_job.id)
 
-        # Get user data for the session
-        # TODO: This need to be passed to the input state.
-        user_education = db_manager.educations.get_by_user_id(user_id)
-        user_certifications = db_manager.certifications.get_by_user_id(user_id)
-        user_experience = db_manager.experiences.get_by_user_id(user_id)
-        user_responses = db_manager.candidate_responses.get_by_user_id(user_id)
-
-        # TODO: Read motivations and interests should just be candidate responses from the database..
-        # TODO: Interview questions will be removed later.
-        # TODO: Read experience should just be experience from the database..
-        input_state = get_main_input_state(
-            selected_job, motivations_and_interests=None, interview_questions=None, experience=None
+        # Build the minimal input state required for the graph execution
+        input_state = InputState(
+            job_description=selected_job.description,
+            experience_ids=[exp.id for exp in db_manager.experiences.get_by_user_id(user_id)],
         )
         config: RunnableConfig = {
             "configurable": {"thread_id": thread_id},
@@ -147,7 +137,7 @@ def chat(
 
         # Wrap the execution in a VCR cassette to capture all requests.
         with vcr.use_cassette("chat.yaml"):
-            graph = stream_agent(input_state, config)
+            graph = stream_agent(input_state, config, context=ctx)
 
         final_state = graph.get_state(config=config)
         output_path = DATA_DIR / "state.json"

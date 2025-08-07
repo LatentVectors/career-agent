@@ -13,8 +13,9 @@ class InputState(BaseModel):
     job_requirements: JobRequirements | None = None
     """The requirements for the job."""
 
-    experience: str
-    """The work experience."""
+    experience_id: int
+    """Identifier of the experience record to summarize. The actual content will be
+    fetched on-demand using the runtime context inside the summarizer nodes."""
 
 
 class OutputState(BaseModel):

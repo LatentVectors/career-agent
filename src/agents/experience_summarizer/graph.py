@@ -12,7 +12,14 @@ class Node(StrEnum):
     END = END
 
 
-builder = StateGraph(InternalState, input_schema=InputState, output_schema=OutputState)
+from src.context import AgentContext
+
+builder = StateGraph(
+    InternalState,
+    input_schema=InputState,
+    output_schema=OutputState,
+    context_schema=AgentContext,
+)
 
 builder.add_node(Node.SUMMARIZE, summarize)
 
