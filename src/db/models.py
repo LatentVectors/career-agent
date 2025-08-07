@@ -109,7 +109,8 @@ class JobPosting(SQLModel, table=True):
     """Job posting data structure."""
 
     id: int = SQLField(default=None, primary_key=True)
-    company_id: int = SQLField(foreign_key="company.id")
+    company_id: int | None = SQLField(foreign_key="company.id", default=None)
+    title: str = SQLField(..., description="Job title")
     description: str = SQLField(..., description="Job description")
     requirements: str = SQLField(default="{}", description="Numbered requirements as JSON string.")
     keywords: str = SQLField(default="{}", description="Keyword and their counts as JSON string.")
