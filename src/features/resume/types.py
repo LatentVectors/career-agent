@@ -23,6 +23,63 @@ class ResumeData(BaseModel):
         default_factory=list, description="List of certifications"
     )
 
+    def __str__(self) -> str:
+        """Return a readable, formatted string representation suitable for output.
+
+        This mirrors a simple resume layout for downstream consumers and logging.
+        """
+        lines: list[str] = []
+        lines.append(f"{self.name}")
+        lines.append(f"{self.title}")
+        lines.append(f"Email: {self.email} | Phone: {self.phone} | LinkedIn: {self.linkedin_url}")
+        lines.append("")
+
+        if self.professional_summary:
+            lines.append("Professional Summary")
+            lines.append(self.professional_summary)
+            lines.append("")
+
+        if self.experience:
+            lines.append("Experience")
+            for exp in self.experience:
+                lines.append(f"- {exp.title} at {exp.company} ({exp.start_date} - {exp.end_date})")
+                for point in exp.points:
+                    lines.append(f"  • {point}")
+            lines.append("")
+
+        if self.skills:
+            lines.append("Skills")
+            lines.append(", ".join(self.skills))
+            lines.append("")
+
+        if self.education:
+            lines.append("Education")
+            for edu in self.education:
+                lines.append(
+                    f"- {edu.degree} in {edu.major} — {edu.institution} ({edu.grad_date})"
+                )
+            lines.append("")
+
+        if self.certifications:
+            lines.append("Certifications")
+            for cert in self.certifications:
+                lines.append(f"- {cert.title} ({cert.date})")
+
+        return "\n".join(lines).strip()
+
+    def __repr__(self) -> str:
+        """Debug-friendly representation summarizing key fields."""
+        exp_count = len(self.experience)
+        edu_count = len(self.education)
+        cert_count = len(self.certifications)
+        skills_count = len(self.skills)
+        return (
+            "ResumeData("
+            f"name={self.name!r}, title={self.title!r}, "
+            f"experience={exp_count}, education={edu_count}, "
+            f"skills={skills_count}, certifications={cert_count})"
+        )
+
 
 class ResumeExperience(BaseModel):
     """Work experience information for a resume."""

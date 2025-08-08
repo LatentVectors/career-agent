@@ -14,10 +14,12 @@ from src.hitl import INTERRUPT_KEY, handle_interrupts
 
 from .logging_config import logger
 from .nodes import (
+    extract_job_metadata,
     get_feedback,
     job_requirements,
     wrapped_experience_agent,
     wrapped_responses_agent,
+    wrapped_resume_generator,
     write_cover_letter,
 )
 from .state import InputState, InternalState
@@ -25,6 +27,8 @@ from .state import InputState, InternalState
 
 # === NODES ===
 class Node(StrEnum):
+    EXTRACT_JOB_METADATA = "extract_job_metadata"
+    WRAPPED_RESUME_GENERATOR = "wrapped_resume_generator"
     WRAPPED_EXPERIENCE_AGENT = "wrapped_experience_agent"
     JOB_REQUIREMENTS = "job_requirements"
     WRITE_COVER_LETTER = "write_cover_letter"
@@ -36,6 +40,8 @@ class Node(StrEnum):
 
 
 builder = StateGraph(state_schema=InternalState, context_schema=AgentContext)
+builder.add_node(Node.EXTRACT_JOB_METADATA, extract_job_metadata)
+builder.add_node(Node.WRAPPED_RESUME_GENERATOR, wrapped_resume_generator)
 builder.add_node(Node.WRAPPED_EXPERIENCE_AGENT, wrapped_experience_agent)
 builder.add_node(Node.JOB_REQUIREMENTS, job_requirements)
 builder.add_node(Node.WRITE_COVER_LETTER, write_cover_letter, defer=True)
@@ -73,7 +79,9 @@ def route_cover_letter_feedback_edge(
     return Node.END
 
 
-builder.add_edge(Node.START, Node.JOB_REQUIREMENTS)
+builder.add_edge(Node.START, Node.EXTRACT_JOB_METADATA)
+builder.add_edge(Node.EXTRACT_JOB_METADATA, Node.JOB_REQUIREMENTS)
+builder.add_edge(Node.JOB_REQUIREMENTS, Node.WRAPPED_RESUME_GENERATOR)
 builder.add_conditional_edges(
     Node.JOB_REQUIREMENTS,
     map_experience_edge,  # type: ignore[arg-type]
