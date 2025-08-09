@@ -16,3 +16,4 @@ alwaysApply: false
     - The `PartialInternalState` should be a TypedDict with total=False, instead of a Pydantic model.
 - The `PartialInternalState` should NOT include the reducers or annotations of the `InternalState`. Also, it should not define default types. The `PartialInternalState` should only mirror the fields and types of the `InternalState` but make all field not-required.
 - All fields on `InternalState` should define a default value.
+- State should be defined in the following order `InputState`, `OutputState`, `InternalState`, other models or types used for internal state, `PartialInternalState`.
