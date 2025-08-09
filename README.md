@@ -55,34 +55,36 @@ Visualize the agent's workflow and decision-making process.
 
 ```
 src/
-├── cli.py                    # CLI interface using Typer
-├── config.py                 # Configuration and settings
-├── graph.py                  # Main LangGraph workflow
-├── state.py                  # State management and data models
-├── nodes/                    # Graph nodes (agent logic)
-│   ├── job_requirements.py   # Extract job requirements from descriptions
-│   ├── summarize_experience_node.py  # Summarize work experience
-│   └── write_cover_letter.py # Generate cover letters
+├── cli.py                        # CLI interface using Typer
+├── config.py                     # Configuration and settings
 ├── agents/
-│   └── experience_summarizer/  # Specialized agent for experience analysis
-├── storage/                  # File-based data storage
-│   ├── FileStorage.py        # File storage implementation
-│   ├── parse_job.py         # Job description parsing
-│   ├── parse_motivations_and_interests.py  # Background parsing
-│   └── parse_interview_questions.py  # Interview Q&A parsing
-└── tools.py                 # Tool registry (for future expansion)
+│   ├── main/                     # Main orchestrator agent
+│   │   ├── graph.py              # Node enum, graph wiring, compiled graph, runtime loop
+│   │   ├── state.py              # Main input/internal/output state
+│   │   └── nodes/                # Main agent nodes
+│   ├── experience_summarizer/    # Sub-agent: experience analysis
+│   ├── responses_summarizer/     # Sub-agent: responses analysis
+│   └── resume_generator/         # Sub-agent: resume generator
+├── logging_config.py             # Logging setup
+├── models.py                     # Model utilities
+├── context.py                    # Runtime context
+├── tools.py                      # Tool registry
+└── db/                           # Database layer
+    ├── database.py
+    ├── models.py
+    └── cli_*.py
 ```
 
 ## Architecture
 
 The system is built around LangGraph with the following components:
 
-1. **State Management** (`state.py`): Tracks conversation history, job requirements, experience summaries, and generated documents
-2. **Nodes** (`nodes/`): Contains the agent logic for:
+1. **State Management** (`agents/main/state.py`): Tracks conversation history, job requirements, experience summaries, and generated documents
+2. **Nodes** (`agents/main/nodes/`): Contains the agent logic for:
    - Extracting job requirements from descriptions
    - Summarizing work experience to align with job requirements
    - Generating personalized cover letters
-3. **Graph** (`graph.py`): Orchestrates the workflow:
+3. **Graph** (`agents/main/graph.py`): Orchestrates the workflow:
    - Extracts job requirements
    - Summarizes relevant experience
    - Generates cover letters

@@ -9,10 +9,10 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command, Send
 
-from src.context import AgentContext
-from src.hitl import INTERRUPT_KEY, handle_interrupts
+from src.core.context import AgentContext
+from src.core.hitl import INTERRUPT_KEY, handle_interrupts
+from src.logging_config import logger
 
-from .logging_config import logger
 from .nodes import (
     extract_job_metadata,
     get_feedback,

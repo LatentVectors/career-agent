@@ -1,6 +1,7 @@
-from src.hitl import dispatch_message_interrupt
+from src.core.hitl import dispatch_message_interrupt
 from src.logging_config import logger
-from src.state import InternalState, PartialInternalState
+
+from ..state import InternalState, PartialInternalState
 
 
 def get_feedback(state: InternalState) -> PartialInternalState:

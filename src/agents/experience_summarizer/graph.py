@@ -2,6 +2,8 @@ from enum import StrEnum
 
 from langgraph.graph import END, START, StateGraph
 
+from src.context import AgentContext
+
 from .nodes import summarize
 from .state import InputState, InternalState, OutputState
 
@@ -11,8 +13,6 @@ class Node(StrEnum):
     START = START
     END = END
 
-
-from src.context import AgentContext
 
 builder = StateGraph(
     InternalState,

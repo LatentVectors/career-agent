@@ -4,10 +4,10 @@ from langchain_core.prompts import ChatPromptTemplate
 from langgraph.runtime import Runtime
 from pydantic import BaseModel, Field
 
-from src.context import AgentContext
+from src.core.context import AgentContext
+from src.core.models import OpenAIModels, get_model
 from src.db import db_manager
 from src.logging_config import logger
-from src.models import OpenAIModels, get_model
 from src.schemas import RequirementSummary
 
 from ..state import InternalState, PartialInternalState

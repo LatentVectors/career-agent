@@ -4,8 +4,8 @@ import typer
 from langchain.chat_models import init_chat_model
 from langsmith import Client
 from openevals.llm import create_llm_as_judge
-from src.nodes.job_requirements import JobRequirements
-from src.nodes.job_requirements import chain as job_requirements_chain
+from src.agents.main.nodes.job_requirements import JobRequirements
+from src.agents.main.nodes.job_requirements import chain as job_requirements_chain
 
 from evals.datasets.datasets.jobs import JOBS_DATASET_NAME, JobsInput
 

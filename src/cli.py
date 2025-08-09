@@ -9,12 +9,12 @@ from typing import Any
 import typer
 from langchain_core.runnables.config import RunnableConfig
 
-from .context import AgentContext
+from .agents.main.graph import GRAPH
+from .agents.main.state import InputState
+from .core.context import AgentContext
 from .db.cli_crud import db_app
 from .db.cli_io import dump_app, load_app
 from .features.resume import resume_app
-from .graph import GRAPH
-from .state import InputState
 
 app = typer.Typer()
 
@@ -174,10 +174,10 @@ def chat(
     from rich.prompt import Prompt
     from vcr import VCR  # type: ignore
 
-    from .callbacks import LoggingCallbackHandler
+    from .agents.main.graph import stream_agent
     from .config import CASSETTE_DIR, DATA_DIR
+    from .core.callbacks import LoggingCallbackHandler
     from .db import db_manager
-    from .graph import stream_agent
     from .logging_config import logger
     from .utils import serialize_state
 

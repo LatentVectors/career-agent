@@ -5,7 +5,8 @@ from typing import Literal
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
-from src.context import AgentContext
+
+from src.core.context import AgentContext
 from src.logging_config import logger
 
 from .nodes import (

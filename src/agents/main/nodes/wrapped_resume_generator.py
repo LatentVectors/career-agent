@@ -11,10 +11,11 @@ from src.agents.resume_generator import (
 from src.agents.resume_generator import (
     resume_agent,
 )
-from src.context import AgentContext
+from src.core.context import AgentContext
 from src.logging_config import logger
-from src.state import InternalState as MainInternalState
-from src.state import PartialInternalState as MainPartialInternalState
+
+from ..state import InternalState as MainInternalState
+from ..state import PartialInternalState as MainPartialInternalState
 
 
 def wrapped_resume_generator(

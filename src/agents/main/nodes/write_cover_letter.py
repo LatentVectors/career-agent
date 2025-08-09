@@ -3,9 +3,10 @@ from typing import List
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
+from src.core.models import OpenAIModels, get_model
 from src.logging_config import logger
-from src.models import OpenAIModels, get_model
-from src.state import InternalState, PartialInternalState, Summary
+
+from ..state import InternalState, PartialInternalState, Summary
 
 
 def write_cover_letter(state: InternalState) -> PartialInternalState:
