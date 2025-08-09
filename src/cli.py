@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import importlib
 import os
+import pkgutil
 import tempfile
+from typing import Any
 
 import typer
 from langchain_core.runnables.config import RunnableConfig
@@ -29,36 +32,136 @@ app.add_typer(resume_app, name="resume")
 @app.command()
 def graph(
     png: bool = typer.Option(False, "--png", help="Draw the graph as a PNG."),
+    agent: str | None = typer.Option(
+        None,
+        "--agent",
+        "-a",
+        help=(
+            "Agent graph to display. If omitted, you will be prompted to choose. "
+            "Options include 'main' and discovered sub-agents."
+        ),
+    ),
 ) -> None:
-    """Draw the graph."""
+    """Draw the selected graph (main or a discovered sub-agent)."""
+
+    # Discover sub-agent graphs before prompting
+    sub_agents = _discover_agent_graphs()
+    options: list[str] = ["main"] + sorted(sub_agents.keys())
+
+    # Resolve selection
+    selected_key: str
+    if agent is None:
+        # Prompt user to choose an agent graph to display
+        try:
+            from rich.prompt import Prompt  # Local import to keep CLI startup lean
+        except Exception:
+            Prompt = None  # type: ignore
+
+        print("Available agents:")
+        for i, name in enumerate(options, start=1):
+            print(f"{i}. {name}")
+
+        if Prompt is not None:
+            choice = Prompt.ask(
+                "Select an agent graph to display",
+                choices=[str(i) for i in range(1, len(options) + 1)],
+            )
+            selected_key = options[int(choice) - 1]
+        else:
+            # Fallback: default to 'main' if rich is unavailable
+            selected_key = "main"
+    else:
+        normalized = agent.strip().lower()
+        if normalized not in [opt.lower() for opt in options]:
+            typer.echo(
+                f"Unknown agent '{agent}'. Valid options: {', '.join(options)}",
+            )
+            raise typer.Exit(code=1)
+        # Map back to canonical option name
+        for opt in options:
+            if opt.lower() == normalized:
+                selected_key = opt
+                break
+
+    # Select the graph object
+    selected_graph = GRAPH if selected_key == "main" else sub_agents[selected_key]
 
     print("=" * 75)
-    print("MAIN GRAPH\n")
-    print(GRAPH.get_graph().draw_ascii())
+    print(f"SELECTED GRAPH: {selected_key}\n")
+    try:
+        print(selected_graph.get_graph().draw_ascii())
+    except Exception:
+        typer.echo("Unable to render ASCII graph for the selected agent.")
     print("\n" * 2)
 
     if not png:
         return
 
-    from PIL import Image
+    def _show_png_for(graph_obj: Any) -> None:
+        from PIL import Image  # Lazy import
 
-    img = GRAPH.get_graph().draw_mermaid_png()
+        img_bytes = graph_obj.get_graph().draw_mermaid_png()
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
+            temp_file.write(img_bytes)
+            temp_file_path = temp_file.name
 
-    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
-        temp_file.write(img)
-        temp_file_path = temp_file.name
-
-    try:
-        image = Image.open(temp_file_path)
-        image.show()
-        typer.echo("Graph displayed in popup window")
-    except Exception as e:
-        typer.echo(f"Error displaying graph: {e}")
-    finally:
         try:
-            os.unlink(temp_file_path)
-        except OSError:
-            pass
+            image = Image.open(temp_file_path)
+            image.show()
+            typer.echo("Graph displayed in popup window")
+        except Exception as e:  # noqa: BLE001
+            typer.echo(f"Error displaying graph: {e}")
+        finally:
+            try:
+                os.unlink(temp_file_path)
+            except OSError:
+                pass
+
+    # Show PNG for the selected graph only
+    _show_png_for(selected_graph)
+
+
+def _discover_agent_graphs() -> dict[str, Any]:
+    """Discover sub-agent compiled graphs dynamically.
+
+    Returns:
+        dict[str, Any]: Mapping of agent key (package name) to its compiled graph object.
+    """
+    try:
+        import src.agents as agents_pkg  # type: ignore
+    except Exception:
+        return {}
+
+    discovered: dict[str, Any] = {}
+    for module_info in pkgutil.iter_modules(agents_pkg.__path__):  # type: ignore[attr-defined]
+        pkg_name = module_info.name
+        try:
+            mod = importlib.import_module(f"src.agents.{pkg_name}")
+        except Exception:
+            continue
+
+        candidate: Any | None = None
+
+        # Preferred convention: attributes ending with "_agent"
+        for attr_name in dir(mod):
+            if not attr_name.endswith("_agent"):
+                continue
+            obj = getattr(mod, attr_name)
+            # Duck-type check for compiled graph objects
+            if hasattr(obj, "get_graph") and callable(getattr(obj, "get_graph", None)):
+                candidate = obj
+                break
+
+        # Fallback to common name "graph"
+        if candidate is None and hasattr(mod, "graph"):
+            obj = getattr(mod, "graph")
+            if hasattr(obj, "get_graph") and callable(getattr(obj, "get_graph", None)):
+                candidate = obj
+
+        if candidate is not None:
+            discovered[pkg_name] = candidate
+
+    return discovered
 
 
 @app.command()
