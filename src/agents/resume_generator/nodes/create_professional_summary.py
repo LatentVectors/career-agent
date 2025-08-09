@@ -15,6 +15,23 @@ def create_professional_summary(state: InternalState) -> PartialInternalState:
 
     Defer: True
 
+    Design contract:
+    - Purpose: Synthesize a concise professional summary tailored to the target job, grounded strictly in the provided experience summaries and responses summary.
+    - Behavior: Use an LLM to produce 3–5 sentences, avoiding generic claims and only using information present in inputs.
+    - Inputs (Reads):
+      - job_description: str (required)
+      - experience_summary: dict[int, str] (optional; at least one of experience_summary or responses_summary must be present)
+      - responses_summary: str | None (optional; at least one of experience_summary or responses_summary must be present)
+    - Outputs (Returns):
+      - professional_summary: str
+
+    Implementation checklist:
+    - Validate required inputs; raise clear ValueError on violations.
+    - Log node start and key result metrics.
+    - Format experience summaries deterministically for the prompt.
+    - Invoke a compact, cost-efficient model and return only the summary text.
+    - Do not mutate the incoming state; return PartialInternalState with updated field only.
+
     Reads:
         - job_description
         - experience_summary
@@ -25,8 +42,19 @@ def create_professional_summary(state: InternalState) -> PartialInternalState:
     """
     logger.debug("NODE: resume_generator.create_professional_summary")
 
-    job_description: str | None = state.job_description
-    experience_summary_map: dict[int, str] = state.experience_summary or {}
+    # Preconditions and validation
+    job_description: str = state.job_description
+    if not job_description or not job_description.strip():
+        raise ValueError("job_description is required to create a professional summary.")
+
+    has_experience = bool(state.experience_summary)
+    has_responses = bool(state.responses_summary and state.responses_summary.strip())
+    if not (has_experience or has_responses):
+        raise ValueError(
+            "At least one of experience_summary or responses_summary must be provided."
+        )
+
+    experience_summary_map = state.experience_summary
     responses_summary: str | None = state.responses_summary
 
     # Format experience summaries for the prompt
@@ -34,16 +62,12 @@ def create_professional_summary(state: InternalState) -> PartialInternalState:
         f"<Experience id=\"{experience_id}\">\n{summary}\n</Experience>\n"
         for experience_id, summary in experience_summary_map.items()
     )
-    if not formatted_experience_summaries:
-        formatted_experience_summaries = "<Experience>None provided</Experience>\n"
 
-    formatted_responses_summary = (
-        responses_summary if responses_summary else "None provided"
-    )
+    formatted_responses_summary = responses_summary or ""
 
-    result: str = summary_chain.invoke(
+    result: str = chain.invoke(
         {
-            "job_description": job_description or "",
+            "job_description": job_description,
             "experience_summaries": formatted_experience_summaries,
             "responses_summary": formatted_responses_summary,
         }
@@ -84,7 +108,7 @@ user_prompt = """
 </Responses Summary>
 """
 
-summary_chain = (
+chain = (
     ChatPromptTemplate.from_messages(
         [
             ("system", system_prompt),
