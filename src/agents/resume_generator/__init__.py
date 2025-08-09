@@ -1,10 +1,4 @@
-"""Resume generator sub-agent.
+from .graph import graph as resume_agent
+from .state import InputState, OutputState
 
-This sub-agent is responsible for generating resumes with intelligent content
-refinement to ensure single-page resumes.
-"""
-
-from .graph import resume_agent
-from .state import InputState, InternalState, OutputState
-
-__all__ = ["resume_agent", "InputState", "InternalState", "OutputState"]
+__all__ = ("resume_agent", "InputState", "OutputState")
