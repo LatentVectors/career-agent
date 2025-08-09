@@ -46,7 +46,7 @@ def graph(
 
     # Discover sub-agent graphs before prompting
     sub_agents = _discover_agent_graphs()
-    options: list[str] = ["main"] + sorted(sub_agents.keys())
+    options: list[str] = sorted(sub_agents.keys())
 
     # Resolve selection
     selected_key: str
