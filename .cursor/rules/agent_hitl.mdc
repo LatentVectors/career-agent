@@ -1,8 +1,7 @@
 ---
-globs: src/hitl.py
+globs: src/core/hitl.py
 alwaysApply: false
 ---
-
 - The `src/hitl.py` file defines the data types and functions for dispatching and handling Human-In-The-Loop (HITL) workflows.
 - This code is the only place where the LangGraph `interrupt` function should be called for initiating human feedback.
 - All functions that initiate an interrupt should follow the naming pattern `dispatch_{action_type}`.

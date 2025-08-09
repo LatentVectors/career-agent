@@ -1,8 +1,7 @@
 ---
-globs: src/**/state.py
+description: Rules for implementing state for LangGraph agents.
 alwaysApply: false
 ---
-
 - The main, overall state for the agent should be defined in `src/state.py`.
 - State for sub-agents should be defined in their individual `src/agents/{agent_name}/state.py`
 - All state should be defined as Pydantic models.

@@ -20,44 +20,51 @@ Below is a high-level map of the repository and the intended purpose of every ma
 
 ---
 
-## Main agent – `src/`
-The main agent is responsible for orchestrating the full "help me get a job" workflow.  Its layout is intentionally flat so that each concern has a single obvious home:
+## Core application layout – `src/`
+This section maps the actual `src/` structure to responsibilities so contributors know where to place code:
 
-* `graph.py` – Builds the LangGraph `StateGraph` that wires every node together, defines edge-routing helpers, and exposes `GRAPH` / `stream_agent` for external callers.
-* `state.py` – TypedDict schemas for the main agent's input, output, and internal working state.  Also provides helpers for constructing the initial state from persisted objects.
-* `nodes/` – **Stateless building blocks** that the graph calls.  Each file should implement **one** node.  Examples:
-  * `job_requirements.py` – extracts numbered requirements from the job description.
-  * `wrapped_experience_agent.py` / `wrapped_responses_agent.py` – thin adapters that call the respective sub-agents and merge their output back into `MainState`.
-  * `write_cover_letter.py` – composes the final cover letter from accumulated summaries.
-  * `write_resume.py` – generates resume content using the resume feature module.
-  * `get_feedback.py` – human-in-the-loop node that routes back into the graph when revisions are requested.
-  * `tool_node.py` – generic or utility nodes.
-  New nodes should live here and be imported/re-exported in `nodes/__init__.py` for easy wildcard import.
-* `schemas/` - Project wide data schemas using Pydantic or TypedDicts. This includes any data read from disk, or shared project wide.
-* `db/` – Database models and CRUD operations for persistent data storage.
-  * `models.py` – SQLAlchemy model definitions for database tables.
-  * `database.py` – Database connection and session management.
-  * `cli_crud.py` – Command-line CRUD operations for database entities.
-  * `cli_io.py` – File I/O operations for importing/exporting data.
-* `features/` – Feature-specific modules that provide specialized functionality.
-  * `resume/` – Resume generation and management functionality.
-    * `content.py` – Core resume content generation logic.
-    * `prompt.py` – Resume-specific prompts and templates.
-    * `types.py` – Resume-related data types and schemas.
-    * `utils.py` – Resume utility functions.
-    * `cli.py` – Resume-specific command-line operations.
-    * `templates/` – HTML resume templates.
-* `agents/` – Self-contained sub-agents that solve specific sub-tasks.
-  * `experience_summarizer/` – Agent for summarizing work experience.
-  * `responses_summarizer/` – Agent for summarizing interview responses.
-* `models.py` – Central place to list LLM model names and a `get_model()` helper so that switching models only requires editing one file.
-* `cli.py` – Typer entry-points (`graph`, `chat`, `save_job`, etc.).  Anything runnable from the command line belongs here, **not** in random scripts.
-* `config.py` – Static configuration (data paths, environment toggles).
-* `logging_config.py` – Initializes the project-wide logger; imported early by every module that needs logging.
-* `callbacks.py` – Custom LangChain callback handlers (e.g. retry logging).
-* `hitl.py` – Dispatch and handlers for human-in-the-loop (HITL) interactions.
-* `tools.py` – External tool wrappers that nodes can call (e.g. web search, shell commands).
-* `utils.py` – Misc. helpers that don't fit elsewhere (state serialization, small pure functions).  Keep this file short; promote code to a dedicated module when it grows.
+- `agents/main/` – The primary orchestrator agent that runs the end-to-end workflow.
+  - `graph.py` – Builds the LangGraph `StateGraph`, wires nodes/edges, and exposes the compiled graph API.
+  - `state.py` – TypedDict schemas for input, working, and output state for the main agent.
+  - `nodes/` – Stateless node functions; one node per file. Key nodes include:
+    - `job_requirements.py` – extract requirements from the job description
+    - `wrapped_experience_agent.py` / `wrapped_responses_agent.py` – adapters that call sub-agents and merge results
+    - `write_cover_letter.py` and `write_resume.py` – assemble final documents
+    - `get_feedback.py` – human-in-the-loop routing
+    - `tool_node.py` – generic utility node
+  - New nodes should be exported via `nodes/__init__.py` for easy imports.
+
+- `agents/` – Self-contained sub-agents used by the main agent or standalone:
+  - `experience_summarizer/`, `responses_summarizer/`, `resume_generator/` (each with its own `graph.py`, `state.py`, and `nodes/`). See the Sub-agents section below for conventions.
+
+- `core/` – Cross-cutting runtime building blocks:
+  - `callbacks.py` – Custom LangChain/LangGraph callbacks
+  - `context.py` – Execution/runtime context helpers
+  - `hitl.py` – Human-in-the-loop dispatch and handlers
+  - `models.py` – Model names, configuration, and `get_model()` helpers
+  - `tools.py` – External tool wrappers callable from nodes
+
+- `db/` – Persistence layer:
+  - `models.py` – SQLAlchemy model definitions
+  - `database.py` – Engine/session management
+  - `cli_crud.py` – CLI for CRUD operations
+  - `cli_io.py` – Import/export helpers
+
+- `features/` – Feature-specific modules:
+  - `resume/` – Resume generation and management
+    - `data_adapter.py` – Reads/converts DB or file content for resume generation
+    - `content.py` – Core resume content composition
+    - `prompt.py` – Prompt fragments and templates
+    - `types.py` – Types and schemas
+    - `utils.py` – Utilities for resume assembly
+    - `cli.py` – Feature-specific CLI commands
+    - `templates/` – HTML resume templates
+
+- `schemas/` – Project-wide data schemas shared across modules.
+- `cli.py` – Typer entry-points (e.g., `graph`, `chat`, `save_job`).
+- `config.py` – Static configuration and environment toggles.
+- `logging_config.py` – Project-wide logger configuration.
+- `utils.py` – Small generic helpers. Promote code to dedicated modules when it grows.
 
 ---
 
@@ -78,12 +85,6 @@ src/agents/my_agent/
 The `nodes/__init__.py` file should export all of the nodes in the directory as part of `__all__`.
 
 The sub-agents `__init__.py` file should export the compiled agent graph and the public API via the Input and Output states from the `states.py` file.
-
-When adding a new sub-agent, follow these rules:
-* Keep all implementation details inside its directory – nothing in `src/nodes/`.
-* Provide `graph.py`, `state.py`, and a `nodes/` package.
-* Make sure `graph.py` exposes a compiled graph (e.g. `my_agent = builder.compile()`) that can be imported by the main agent.
-* Keep prompts, model calls, and heavy logic inside nodes, **never** in `graph.py`.
 
 ---
 
