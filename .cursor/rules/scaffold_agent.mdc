@@ -25,6 +25,56 @@ You are responsible for implementing the scaffolding for a new LangGraph agent. 
 - Review the Agent's README file paying special attention to the Agent's State.
 - Review the rules for defining an agents state outlined in @agent_state.mdc.
 - Using the InputState, OutputState and entries defined in the Nodes 'Returns' sections create the agents `state.py` file and define the InputState, OutputState, InternalState, and PartialInternalState.
+- Implement reducers for any state entry marked in the README as needing a reducer. The reduce will usually be specified in a simple note following the state entry. eg. `- iteration_count: int = 0 # Reduce increment int.
+- Define all specialized reducer functions at the top of the state file.
+- If the README does not indicate the use of a reducer, DO NOT PROVIDE ONE.
+- If the README specifies a reducer, include it exactly as written; otherwise do not add a reducer.
+- Reducers MUST be defined on InternalState fields using typing.Annotated[T, reducer_callable]. Do not add reducers on InputState, OutputState, or PartialInternalState.
+- PartialInternalState must mirror the types of InternalState fields but must NOT include reducers or defaults.
+
+State field requirement policy (required/optional/defaults):
+- InputState
+  - Only the InputState may contain required fields by default.
+  - A field is required unless the README explicitly provides a concrete default value.
+  - Do not use `None` as a default in the InputState unless the README explicitly specifies `None` as the default.
+- OutputState
+  - All OutputState fields must default to `None` unless the README explicitly specifies a concrete default value.
+  - Annotate each OutputState field as `T | None` and set its default to `None`.
+- InternalState
+  - Must subclass InputState and OutputState and include all intermediate/working fields.
+  - All InternalState fields must have defaults.
+  - For mutable collections, use `Field(default_factory=...)` to avoid shared mutable defaults.
+  - Add reducers only on InternalState fields using `typing.Annotated[T, reducer]` as indicated by the README.
+- PartialInternalState
+  - Must be a `TypedDict` with `total=False` so no keys are required.
+  - Mirror all InternalState keys. For each key, use an optional type `T | None` (even if the InternalState field is not optional) so that Partial updates can omit keys or pass `None`.
+  - Do not include reducers or defaults in the PartialInternalState.
+
+```python
+from __future__ import annotations
+
+import operator
+from typing import Annotated
+from pydantic import BaseModel, Field
+
+# Simple dict merge reducer
+def merge_dicts(left: dict, right: dict) -> dict:
+    return {**left, **right}
+
+class InternalState(InputState, OutputState, BaseModel):
+    # Counter (e.g., feedback iterations)
+    feedback_loop_iterations: Annotated[int, operator.add] = 0
+
+    # List append
+    collected_items: Annotated[list[str], operator.add] = []
+
+
+    # Shallow dict merge (e.g., keyed by experience_id)
+    experience_summary: Annotated[dict[int, str], merge_dicts] = Field(default_factory=dict)
+
+    # Last-write-wins (no reducer needed; plain assignment)
+    current_stage: str | None = None
+```
 
 3) **Mock-in the Agents's Nodes**
 - If not already created, add the `nodes` module to the agent.
@@ -91,10 +141,12 @@ __all__ = (
 - Perform a full verification pass with the following checklist:
     - State
         - Every entry in Nodes/Edges Reads, Sets, and Returns exists in `InternalState`.
-        - `InputState` and `OutputState` match README exactly (names, types, defaults).
+        - `InputState` and `OutputState` match README exactly (names, types, defaults), following the requirement policy: InputState fields required unless README gives a default; OutputState fields `T | None = None` unless README gives a concrete default.
         - Iterative/reducer fields (e.g., feedback counters) are clearly named, typed as `int`, and initialized.
         - Map context fields are present in `InternalState`.
         - All referenced types exist in code and are importable (e.g., domain data models and output schemas used by this agent). Replace examples with your agent’s concrete types.
+        - Make sure all reducers indicated in the README are implemented and properly annotated.
+        - `PartialInternalState` is a `TypedDict` with `total=False`, mirrors all InternalState fields using optional types (`T | None`), and contains no reducers/defaults.
     - Nodes
         - A node file exists for every node listed in the README’s Nodes section.
         - Each node signature is `def node_name(state: InternalState) -> PartialInternalState`.
