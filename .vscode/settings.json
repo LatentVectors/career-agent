@@ -8,17 +8,21 @@
         "**/.venv": true,
         "**/data/logs": true,
         "**/*.egg-info": true,
-        "build/": true,
+        "build/": true
     },
     "search.exclude": {
         "**/.venv": true,
         "**/data": true,
-        "**/logs": true,
+        "**/logs": true
     },
     "files.watcherExclude": {
         "**/.venv": true,
         "**/data": true,
         "**/logs": true,
+        "**/.mypy_cache": true,
+        "**/.ruff_cache": true,
+        "**/build": true,
+        "**/dist": true
     },
     "python.analysis.exclude": [
         "/data"
@@ -37,9 +41,25 @@
     "[json]": {
         "editor.wordWrap": "wordWrapColumn",
         "editor.wordWrapColumn": 130,
-        "editor.wrappingIndent": "indent",
+        "editor.wrappingIndent": "indent"
     },
     "ruff.nativeServer": "on",
+    "mypy-type-checker.importStrategy": "fromEnvironment",
+    "mypy-type-checker.interpreter": [
+        "/Users/mjlindow/projects/DS/agents/.venv/bin/python"
+    ],
+    "mypy-type-checker.args": [
+        "--follow-imports=silent"
+    ],
+    "mypy-type-checker.targets": [
+        "src",
+        "test"
+    ],
+    "mypy-type-checker.reportingScope": "file",
+    "mypy-type-checker.preferDaemon": true,
+    "python.defaultInterpreterPath": "/Users/mjlindow/projects/DS/agents/.venv/bin/python",
+    "python.analysis.typeCheckingMode": "off",
+    "python.analysis.indexing": false,
     "python.testing.pytestArgs": [
         "test"
     ],

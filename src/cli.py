@@ -9,8 +9,7 @@ from typing import Any
 import typer
 from langchain_core.runnables.config import RunnableConfig
 
-from .agents.main.graph import GRAPH
-from .agents.main.state import InputState
+from .agents.main import InputState, main_agent
 from .core.context import AgentContext
 from .db.cli_crud import db_app
 from .db.cli_io import dump_app, load_app
@@ -84,7 +83,7 @@ def graph(
                 break
 
     # Select the graph object
-    selected_graph = GRAPH if selected_key == "main" else sub_agents[selected_key]
+    selected_graph = graph if selected_key == "main" else sub_agents[selected_key]
 
     print("=" * 75)
     print(f"SELECTED GRAPH: {selected_key}\n")
@@ -174,9 +173,9 @@ def chat(
     from rich.prompt import Prompt
     from vcr import VCR  # type: ignore
 
-    from .agents.main.graph import stream_agent
     from .config import CASSETTE_DIR, DATA_DIR
     from .core.callbacks import LoggingCallbackHandler
+    from .core.runner import stream_agent
     from .db import db_manager
     from .logging_config import logger
     from .utils import serialize_state
@@ -240,9 +239,9 @@ def chat(
 
         # Wrap the execution in a VCR cassette to capture all requests.
         with vcr.use_cassette("chat.yaml"):
-            graph = stream_agent(input_state, config, context=ctx)
+            main_graph = stream_agent(main_agent, input_state, config, context=ctx)
 
-        final_state = graph.get_state(config=config)
+        final_state = main_graph.get_state(config=config)
         output_path = DATA_DIR / "state.json"
         with open(output_path, "w") as f:
             f.write(serialize_state(final_state.values))
@@ -257,6 +256,105 @@ def chat(
             print(resume)
     except Exception as e:
         logger.exception(f"Error chatting: {e}")
+        raise e
+
+
+@app.command()
+def generate_resume(
+    replay: bool = typer.Option(False, "--replay", help="Replay recorded requests."),
+    thread_id: str = typer.Option("1", "--thread-id", help="A thread ID for the agent config."),
+    user_id: int = typer.Option(
+        1, "--user-id", help="The user ID to use for the resume generation."
+    ),
+) -> None:
+    """Generate a resume for a user."""
+    from rich.prompt import Prompt
+    from vcr import VCR  # type: ignore
+
+    from .agents.resume_generator import InputState as ResumeInputState
+    from .agents.resume_generator import resume_agent
+    from .config import CASSETTE_DIR, DATA_DIR
+    from .core.callbacks import LoggingCallbackHandler
+    from .core.runner import stream_agent
+    from .db import db_manager
+    from .logging_config import logger
+    from .utils import serialize_state
+
+    vcr = VCR(
+        cassette_library_dir=str(CASSETTE_DIR),
+        match_on=("method", "uri", "body", "query"),
+        record_mode="new_episodes" if replay else "all",
+    )
+
+    try:
+        # Get user
+        user = db_manager.users.get_by_id(user_id)
+        if user is None:
+            typer.echo(f"No user found with ID {user_id}.")
+            raise typer.Exit(code=1)
+
+        # Get all job postings
+        job_postings = db_manager.job_postings.get_all()
+        if not job_postings:
+            print("No job postings found")
+            return
+
+        # Show available job postings
+        print("Available job postings:")
+        for i, job in enumerate(job_postings, 1):
+            company_name = "Unknown Company"
+            if job.company_id:
+                company = db_manager.companies.get_by_id(job.company_id)
+                if company:
+                    company_name = company.name
+            print(f"{i}. {job.title} at {company_name}")
+
+        # Let user select job posting
+        job_choice = Prompt.ask(
+            "Select a job posting", choices=[str(i) for i in range(1, len(job_postings) + 1)]
+        )
+        selected_job = job_postings[int(job_choice) - 1]
+
+        # Get company name for display
+        company_name = "Unknown Company"
+        if selected_job.company_id:
+            company = db_manager.companies.get_by_id(selected_job.company_id)
+            if company:
+                company_name = company.name
+
+        print(f"Selected: {selected_job.title} at {company_name}")
+
+        # Build runtime context for the graph execution
+        ctx = AgentContext(user_id=user_id, job_posting_id=selected_job.id)
+
+        # Build the input state required for the resume generator
+        input_state = ResumeInputState(
+            job_title=selected_job.title,
+            job_description=selected_job.description,
+        )
+
+        config: RunnableConfig = {
+            "configurable": {"thread_id": thread_id},
+            "callbacks": [LoggingCallbackHandler()],
+        }
+
+        # Execute with VCR cassette to capture requests
+        with vcr.use_cassette("generate_resume.yaml"):
+            compiled = stream_agent(resume_agent, input_state, config, context=ctx)
+
+        final_state = compiled.get_state(config=config)
+        output_path = DATA_DIR / "resume_state.json"
+        with open(output_path, "w") as f:
+            f.write(serialize_state(final_state.values))
+
+        resume_path = final_state.values.get("resume_path")
+        if resume_path:
+            print("\n\n=== RESUME PDF GENERATED ===\n")
+            print(str(resume_path))
+        else:
+            print("\n\nNo resume PDF path found in final state. Check logs for details.")
+    except Exception as e:
+        logger.exception(f"Error generating resume: {e}")
         raise e
 
 

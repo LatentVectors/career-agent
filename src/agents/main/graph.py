@@ -3,14 +3,11 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import List, Literal
 
-from langchain_core.runnables.config import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
-from langgraph.graph.state import CompiledStateGraph
-from langgraph.types import Command, Send
+from langgraph.types import Send
 
 from src.core.context import AgentContext
-from src.core.hitl import INTERRUPT_KEY, handle_interrupts
 from src.logging_config import logger
 
 from .nodes import (
@@ -22,7 +19,7 @@ from .nodes import (
     wrapped_resume_generator,
     write_cover_letter,
 )
-from .state import InputState, InternalState
+from .state import InternalState
 
 
 # === NODES ===
@@ -100,40 +97,4 @@ builder.add_conditional_edges(
 
 # === GRAPH ===
 memory = MemorySaver()
-GRAPH = builder.compile(checkpointer=memory)
-
-
-def stream_agent(
-    input_state: InputState,
-    config: RunnableConfig,
-    context: AgentContext,
-) -> CompiledStateGraph[InternalState, None, InternalState, InternalState]:
-    """Stream the agent.
-
-    Args:
-        input_state: The input state.
-        thread_id: The thread ID.
-
-    Returns:
-        The compiled state graph.
-    """
-
-    logger.info("Starting agent...")
-    current_input: object = input_state
-    while True:
-        stream = GRAPH.stream(current_input, context=context, config=config)  # type: ignore[arg-type]
-        interrupted: bool = False
-        for event in stream:
-            logger.info("--> Event Batch <--")
-            for key in event.keys():
-                logger.info(f"EVENT: {key}")
-            interrupts = event.get(INTERRUPT_KEY, None)
-            if interrupts:
-                logger.info("Interrupts:")
-                commands = handle_interrupts(interrupts)
-                current_input = Command(resume=commands)
-                interrupted = True
-                break
-        if not interrupted:
-            break
-    return GRAPH  # type: ignore[return-value]
+graph = builder.compile(checkpointer=memory)

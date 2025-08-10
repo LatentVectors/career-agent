@@ -4,7 +4,7 @@ from uuid import UUID
 from langchain_core.callbacks import BaseCallbackHandler
 from tenacity import RetryCallState
 
-from .logging_config import logger
+from src.logging_config import logger
 
 
 class LoggingCallbackHandler(BaseCallbackHandler):

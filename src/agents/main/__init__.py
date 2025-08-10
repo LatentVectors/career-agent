@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from .graph import GRAPH, Node, stream_agent
+from .graph import graph
+from .state import InputState, OutputState
 
-# Consistent agent handle for discovery and imports
-main_agent = GRAPH
+main_agent = graph
 
-__all__ = ["main_agent", "GRAPH", "Node", "stream_agent"]
+__all__ = ["main_agent", "InputState", "OutputState"]

@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from typing import Any, Union
 
 from pydantic import BaseModel
@@ -12,6 +13,8 @@ class PydanticEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
         if isinstance(obj, BaseModel):
             return obj.model_dump(mode="json")
+        if isinstance(obj, Path):
+            return str(obj)
         return super().default(obj)
 
 

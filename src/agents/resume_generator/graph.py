@@ -3,6 +3,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Literal
 
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
 
@@ -128,5 +129,5 @@ builder.add_edge(Node.PROVIDE_RESUME_FEEDBACK, Node.SELECT_RESUME_CONTENT)
 
 
 # === GRAPH ===
-# TODO: Standardize the names for the compiled graph.
-graph = builder.compile()
+memory = MemorySaver()
+graph = builder.compile(checkpointer=memory)

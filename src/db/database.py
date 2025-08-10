@@ -7,7 +7,7 @@ for performing CRUD operations on the application's data models.
 from __future__ import annotations
 
 import contextlib
-from typing import Generator, Generic, TypeVar
+from typing import ContextManager, Generic, Iterator, Protocol, TypeVar
 
 from loguru import logger
 from sqlmodel import Session, SQLModel, create_engine, select
@@ -25,8 +25,15 @@ from .models import (
     User,
 )
 
-# Type variable for SQLModel classes
-T = TypeVar("T", bound=SQLModel)
+
+class ModelWithId(Protocol):
+    """Structural type for persisted models that expose an integer primary key."""
+
+    id: int
+
+
+# Type variable for SQLModel classes that have an ``id`` attribute
+T = TypeVar("T", bound=ModelWithId)
 
 
 class DatabaseClient:
@@ -56,7 +63,7 @@ class DatabaseClient:
         logger.info("Database tables dropped successfully")
 
     @contextlib.contextmanager
-    def get_session(self) -> Generator[Session, None, None]:
+    def get_session(self) -> Iterator[Session]:
         """Get a database session context manager.
 
         Yields:
@@ -108,10 +115,8 @@ class Repository(Generic[T]):
             session.add(obj)
             session.commit()
             session.refresh(obj)
-            # Get a fresh copy of the object to avoid detached instance issues
-            result = session.get(self.model, obj.id)
             logger.debug(f"Created {self.model.__name__} with ID: {obj.id}")
-            return result
+            return obj
 
     def get_by_id(self, obj_id: int) -> T | None:
         """Get an object by its ID.
@@ -363,11 +368,11 @@ class DatabaseManager:
         """Drop all database tables."""
         self.client.drop_tables()
 
-    def get_session(self) -> Session:
-        """Get a database session.
+    def get_session(self) -> ContextManager[Session]:
+        """Get a database session context manager.
 
         Returns:
-            Database session
+            Context manager that yields a database ``Session``
         """
         return self.client.get_session()
 

@@ -27,7 +27,7 @@ def summarize(
         return PartialInternalState(summary=[])
 
     # Fetch the experience record on-demand.
-    exp_id = state.experience_id  # type: ignore[attr-defined]
+    exp_id = state.experience_id
     experience_record = db_manager.experiences.get_by_id(exp_id) if exp_id is not None else None
     if experience_record is None or not experience_record.content:
         logger.warning("Experience record not found or empty. Returning empty summary.")
