@@ -4,7 +4,11 @@ from datetime import datetime
 from pathlib import Path
 
 from src.config import DATA_DIR, PROJECT_ROOT
-from src.features.resume.utils import get_pdf_page_count, render_template_to_pdf
+from src.features.resume.utils import (
+    compute_pdf_metrics,
+    compute_resume_page_length,
+    render_template_to_pdf,
+)
 from src.logging_config import logger
 
 from ..state import InternalState, PartialInternalState
@@ -78,18 +82,22 @@ def generate_resume_pdf(state: InternalState) -> PartialInternalState:
         logger.exception("Failed to generate resume PDF: %s", exc)
         return PartialInternalState()
 
-    # Derive page length
+    # Derive page length using per-page fill metrics
     try:
-        page_count = get_pdf_page_count(pdf_path)
-        page_length = float(page_count)
+        metrics = compute_pdf_metrics(pdf_path)
+        percentages = [pm.percent_filled for pm in metrics.page_metrics]
+        page_length = compute_resume_page_length(percentages)
+        logger.debug(
+            "Resume PDF generated: path=%s pages=%s last_pct=%.2f template=%s",
+            pdf_path,
+            metrics.total_pages,
+            percentages[-1] if percentages else 0.0,
+            template_name,
+        )
+        return PartialInternalState(resume_path=pdf_path, resume_page_length=page_length)
     except Exception as exc:  # noqa: BLE001
-        logger.exception("Failed to read PDF page count: %s", exc)
+        logger.exception("Failed to compute PDF metrics: %s", exc)
         return PartialInternalState(resume_path=pdf_path)
-
-    logger.debug(
-        "Resume PDF generated: path=%s pages=%s template=%s", pdf_path, page_count, template_name
-    )
-    return PartialInternalState(resume_path=pdf_path, resume_page_length=page_length)
 
 
 def _safe_slug(value: str) -> str:

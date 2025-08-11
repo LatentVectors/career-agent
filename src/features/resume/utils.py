@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 import jinja2
 from loguru import logger
+from pydantic import BaseModel, ConfigDict
 from PyPDF2 import PdfReader
 from weasyprint import CSS, HTML  # type: ignore
 
@@ -127,6 +128,215 @@ def render_template_to_pdf(
 
     # Convert HTML to PDF
     return convert_html_to_pdf(html_content, output_path, css_string)
+
+
+class PageMetric(BaseModel):
+    """Immutable per-page metrics for a PDF page.
+
+    percent_filled is a value between 0.0 and 1.0 inclusive.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    page_number: int
+    margin: float
+    min_x: float
+    max_x: float
+    min_y: float
+    max_y: float
+    percent_filled: float
+
+
+class PDFMetrics(BaseModel):
+    """Immutable document-level metrics across all pages."""
+
+    model_config = ConfigDict(frozen=True)
+
+    total_pages: int
+    page_metrics: List[PageMetric]
+
+
+def compute_pdf_metrics(pdf_path: str | Path) -> PDFMetrics:
+    """Compute per-page content extrema, uniform margin, and fill percentage metrics.
+
+    Returns immutable Pydantic models capturing metrics for each page.
+    """
+    pdf_path = Path(pdf_path)
+    if not pdf_path.exists():
+        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+
+    # Analyze page extents using pdfminer.six layout
+    extents = _analyze_pdf_page_extents(pdf_path)
+
+    if not extents:
+        return PDFMetrics(total_pages=0, page_metrics=[])
+
+    margin = _compute_uniform_margin(extents)
+    percentages = _compute_page_fill_percentages(extents, margin)
+
+    page_metrics: list[PageMetric] = []
+    for i, (ext, pct) in enumerate(zip(extents, percentages), start=1):
+        page_metrics.append(
+            PageMetric(
+                page_number=i,
+                margin=margin,
+                min_x=ext["min_x"],
+                max_x=ext["max_x"],
+                min_y=ext["min_y"],
+                max_y=ext["max_y"],
+                percent_filled=pct,
+            )
+        )
+
+    return PDFMetrics(total_pages=len(extents), page_metrics=page_metrics)
+
+
+def compute_resume_page_length(percentages: list[float]) -> float:
+    """Aggregate resume page length from per-page fill percentages.
+
+    - If only one page: return its percent filled.
+    - If multiple pages: (num_pages - 1) + last_page_percent.
+    """
+    if not percentages:
+        return 0.0
+    if len(percentages) == 1:
+        return float(_clamp(percentages[0], 0.0, 1.0))
+    return float(len(percentages) - 1 + _clamp(percentages[-1], 0.0, 1.0))
+
+
+def _analyze_pdf_page_extents(pdf_path: Path) -> list[dict[str, float]]:
+    """Return per-page content extents and page size using pdfminer.six.
+
+    Each item: {min_x, max_x, min_y, max_y, page_width, page_height}
+    If a page has no detectable content, min values will equal page dimension
+    and max values will be 0.
+    """
+    # Lazy import to reduce CLI import overhead
+    from pdfminer.high_level import extract_pages  # type: ignore
+    from pdfminer.layout import LAParams  # type: ignore
+
+    laparams = LAParams()
+    extents: list[dict[str, float]] = []
+
+    for page_layout in extract_pages(str(pdf_path), laparams=laparams):
+        # pdfminer LTPage provides bbox as (x0, y0, x1, y1)
+        try:
+            x0, y0, x1, y1 = page_layout.bbox  # type: ignore[attr-defined]
+        except Exception:  # noqa: BLE001
+            # Fallbacks in case of version differences
+            x0, y0 = 0.0, 0.0
+            x1 = float(getattr(page_layout, "width", 0.0))
+            y1 = float(getattr(page_layout, "height", 0.0))
+
+        page_width = float(x1 - x0)
+        page_height = float(y1 - y0)
+
+        # Initialize extremes
+        min_x = page_width
+        max_x = 0.0
+        min_y = page_height
+        max_y = 0.0
+        found_any = False
+
+        for element in _iter_layout_elements(page_layout):
+            bbox = getattr(element, "bbox", None)
+            if not bbox or not isinstance(bbox, tuple) or len(bbox) != 4:
+                continue
+            ex0, ey0, ex1, ey1 = bbox
+            # Skip zero-area or invalid boxes
+            if ex1 <= ex0 or ey1 <= ey0:
+                continue
+            found_any = True
+            if ex0 < min_x:
+                min_x = float(ex0)
+            if ex1 > max_x:
+                max_x = float(ex1)
+            if ey0 < min_y:
+                min_y = float(ey0)
+            if ey1 > max_y:
+                max_y = float(ey1)
+
+        if not found_any:
+            # Keep defaults that indicate no content
+            min_x = page_width
+            min_y = page_height
+            max_x = 0.0
+            max_y = 0.0
+
+        extents.append(
+            {
+                "min_x": float(min_x),
+                "max_x": float(max_x),
+                "min_y": float(min_y),
+                "max_y": float(max_y),
+                "page_width": float(page_width),
+                "page_height": float(page_height),
+            }
+        )
+
+    return extents
+
+
+def _iter_layout_elements(layout_obj: object) -> Iterable[object]:
+    """Depth-first iteration over pdfminer layout elements that have bbox."""
+    # Many layout objects in pdfminer are iterable containers
+    stack = [layout_obj]
+    while stack:
+        obj = stack.pop()
+        # Skip the root LTPage from yielding; we only want its children
+        try:
+            children = list(obj)
+        except Exception:  # noqa: BLE001
+            children = []
+        for child in children:
+            # Yield child if it has a bbox; also continue descending into containers
+            if hasattr(child, "bbox"):
+                yield child
+            # Descend further for compound elements (e.g., LTFigure, LTTextBox)
+            try:
+                if len(list(child)):
+                    stack.append(child)
+            except Exception:  # noqa: BLE001
+                continue
+
+
+def _compute_uniform_margin(extents: list[dict[str, float]]) -> float:
+    """Infer a uniform margin as the minimum distance to edges across all pages."""
+    margin = float("inf")
+    for e in extents:
+        left = max(0.0, e["min_x"] - 0.0)
+        right = max(0.0, e["page_width"] - e["max_x"])
+        bottom = max(0.0, e["min_y"] - 0.0)
+        top = max(0.0, e["page_height"] - e["max_y"])
+        margin = min(margin, left, right, top, bottom)
+
+    if margin == float("inf"):
+        return 0.0
+    # Clamp to non-negative and not more than half of page height just in case
+    # Use first page height as a bound if available
+    page_height = extents[0]["page_height"] if extents else 0.0
+    return _clamp(margin, 0.0, page_height / 2 if page_height > 0 else margin)
+
+
+def _compute_page_fill_percentages(extents: list[dict[str, float]], margin: float) -> list[float]:
+    """Compute vertical fill percentage for each page based on extents and uniform margin."""
+    percentages: list[float] = []
+    for e in extents:
+        page_height = e["page_height"]
+        # Guard against degenerate sizes
+        usable_height = max(0.0, page_height - 2.0 * margin)
+        if usable_height <= 0.0:
+            percentages.append(1.0)
+            continue
+        # According to PDF coordinate system (origin bottom-left)
+        vertical_extent = max(0.0, page_height - e["min_y"] - margin)
+        pct = _clamp(vertical_extent / usable_height, 0.0, 1.0)
+        percentages.append(float(pct))
+    return percentages
+
+
+def _clamp(value: float, min_value: float, max_value: float) -> float:
+    return max(min_value, min(max_value, value))
 
 
 def get_pdf_page_count(pdf_path: str | Path) -> int:
