@@ -34,14 +34,12 @@ alwaysApply: false
 - Use PydanticSettings for overall settings, including ones read from .env.
 
 ## Logging
+- Import the logger from `logger_config` via `from src.logger_config import logger`.
 - Use structured logging with appropriate log levels
 - Include context in log messages
 - Use loguru for consistent logging across the project
 - Make sure to use `logger.exception` to log all errors inside of expect blocks.
 - Outside of except blocks use `logger.error(msg, exception=True)` and be sure to include the exception and stack trace.
-
-## LangGraph
-- When using `Send` from LangGraph to send messages directly to specific nodes, always send a validated Pydantic model.
 
 ## Performance Considerations
 - Use `pathlib.Path` instead of string paths
@@ -54,6 +52,3 @@ alwaysApply: false
 - Use environment variables for configuration
 - Validate all user inputs
 - Use parameterized queries for database operations
-
-## CLI
-- Add all imports at the top of typer commands for the CLI, to avoid expensive imports before the CLI starts.

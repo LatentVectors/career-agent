@@ -3,7 +3,7 @@ This document outlines the workflow for fully implementing the node's of an agen
 # Phase 1: Understand the Nodes Context
 GOAL: Understand and contextualize how the current node fits into the overall agent and the role it plays in helping the agent complete its objective. Identify and resolve any ambiguity in the nodes overall purpose and functionality.
 
-- Review the rules for interpreting an agent's README in @agent_readme.
+- Review the rules for interpreting an agent's README in @.cursor/rules/standards/agents/readme.mdc.
 - Read the agent's README file to understand the broader context of the current node.
 - Identify any ambiguity around the overall purpose or functionality of the current node.
 - Think through important questions about this node and how it relates to the agent overall. The following is a non-exhaustive list of potential questions you can ask to help you carefully think through the nodes role and what is required for a strong implementation:
@@ -21,8 +21,8 @@ GOAL: Understand and contextualize how the current node fits into the overall ag
 # Phase 2: Refine Docstring Design Contract
 GOAL: Distill context around the node into a detailed design contract that avoid the need for rework or clarification during the nodes implementation. Codify the node's purpose and functionality into a detailed specification that can be followed to correctly implement the nodes logic. The specification should include enough information for the LLM agent to correctly implement the node on the first try.
 
-- Review rules for nodes found in @agent_nodes.mdc.
-- If the node uses Human-In-The-Loop, review the rules for HITL found in @agent_hitl.mdc.
+- Review rules for nodes found in @.cursor/rules/standards/agents/nodes.mdc.
+- If the node uses Human-In-The-Loop, review the rules for HITL found in @.cursor/rules/standards/agents/hitl.mdc.
 - Update the nodes docstring to include a clear and comprehensive summary and design contract, distilling the context and specifications for the node identified earlier.
 - Be sure to include the following:
     - An overview of the nodes purpose, intended behavior, and expected outcomes.
@@ -40,6 +40,6 @@ GOAL: Verify the node is properly implemented, error free, and follows all best 
 - Does the node pass linting and type checking?
 - Are thee any logic errors or lurking bugs in the implementation?
 - Verify all best practices and guidance on nodes have been followed:
-    - Does the node follow the guidelines found in @agent_nodes.mdc?
-    - Does the agent follow the guidelines for HITL in @agent_hitl.mdc, if applicable?
-    - Does the code follow coding standards outlined in @python.mdc?
+    - Does the node follow the guidelines found in @.cursor/rules/standards/agents/nodes.mdc?
+    - Does the agent follow the guidelines for HITL in @.cursor/rules/standards/agents/hitl.mdc, if applicable?
+    - Does the code follow coding standards outlined in @.cursor/rules/standards/code_style/python.mdc?

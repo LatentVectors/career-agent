@@ -8,3 +8,5 @@ alwaysApply: false
 - Use pytest fixtures for common setup
 - Mock external dependencies
 - Use parametrized tests for multiple input scenarios
+- Test functions do not need to provide a return type annotation.
+- Test fixtures and test arguments should use type annotations.

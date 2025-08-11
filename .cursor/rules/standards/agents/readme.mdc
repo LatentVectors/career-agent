@@ -17,7 +17,7 @@ Defines the input and output state for the agent. The InternalState of the agent
 - Some state entries are followed by comment. These comments provide additional context about the state key, such as where the type is defined, or how the value should be reduced.
 - State entries can provide a default value via `- state_key_name: type = {default_value}`.
 
-For additional rules for agent state see: @agent_state.mdc
+For additional rules for agent state see: @.cursor/rules/standards/agents/state.mdc
 
 ## Nodes
 Defines the nodes of the agent.

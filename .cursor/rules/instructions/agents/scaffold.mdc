@@ -6,7 +6,7 @@ You are responsible for implementing the scaffolding for a new LangGraph agent. 
 # Workflow
 
 1) **Analyze the Agent's README**
-- Review the rules for interpreting an Agent's README file defined in @agent_readme.mdc.
+- Review the rules for interpreting an Agent's README file defined in @.cursor/rules/standards/agents/readme.mdc.
 - Carefully examine the Agent's README file and check the following:
     - All required sections are defined.
     - All state entries have a single, consistent type.
@@ -21,9 +21,9 @@ You are responsible for implementing the scaffolding for a new LangGraph agent. 
 
 2) **Implement the Agent's State**
 - If not already created, add the `state.py` file to the agent's module.
-- Review the rules for interpreting an Agent's README file defined in @agent_readme.mdc.
+- Review the rules for interpreting an Agent's README file defined in @.cursor/rules/standards/agents/readme.mdc.
 - Review the Agent's README file paying special attention to the Agent's State.
-- Review the rules for defining an agents state outlined in @agent_state.mdc.
+- Review the rules for defining an agents state outlined in @.cursor/rules/standards/agents/state.mdc.
 - Using the InputState, OutputState and entries defined in the Nodes 'Returns' sections create the agents `state.py` file and define the InputState, OutputState, InternalState, and PartialInternalState.
 - Implement reducers for any state entry marked in the README as needing a reducer. The reduce will usually be specified in a simple note following the state entry. eg. `- iteration_count: int = 0 # Reduce increment int.
 - Define all specialized reducer functions at the top of the state file.
@@ -78,7 +78,7 @@ class InternalState(InputState, OutputState, BaseModel):
 
 3) **Mock-in the Agents's Nodes**
 - If not already created, add the `nodes` module to the agent.
-- Review the rules for interpreting an Agent's README file defined in @agent_readme.mdc.
+- Review the rules for interpreting an Agent's README file defined in @.cursor/rules/standards/agents/readme.mdc.
 - Review the Agent's README file paying special attention to the Agent's Nodes.
 - Review the guidelines for interpreting the README's graph section outlined below.
 - SINCE YOU ARE ONLY MOCKING IN THE NODE, DO NOT WASTE TIME REVIEWING THE RULES FOR IMPLEMENTING NODES AND JUST FOLLOW THE TEMPLATE OUTLINED IN THIS SECTION!
@@ -109,11 +109,11 @@ __all__ = (
 
 4) **Implement the Agent's Graph**
 - If not already created, add the `graph.py` file to the agent's module.
-- Review the rules for interpreting an Agent's README file defined in @agent_readme.mdc.
+- Review the rules for interpreting an Agent's README file defined in @.cursor/rules/standards/agents/readme.mdc.
 - Review the Agent's README file paying special attention to the Agent's Graph.
 - Review the guidelines for interpreting the README's graph section outlined below.
-- Review the rules for defining an agents graph outlined in @agent_graphs.mdc.
-- Review the rules for defining an agent's edges outlined in: @agent_edges.mdc
+- Review the rules for defining an agents graph outlined in @.cursor/rules/standards/agents/graph.mdc.
+- Review the rules for defining an agent's edges outlined in: @.cursor/rules/standards/agents/edges.mdc
 - Import the agents state.
 - Import the agents nodes.
 - Define the Node StrEnum for the agent's nodes.
@@ -136,7 +136,7 @@ __all__ = (
 ```
 
 5) **Review**
-- Review the rules for interpreting an Agent's README file defined in @agent_readme.mdc.
+- Review the rules for interpreting an Agent's README file defined in @.cursor/rules/standards/agents/readme.mdc.
 - Note: Example names below are illustrative. Replace them with the types, context class, and model names specific to the agent you are scaffolding.
 - Perform a full verification pass with the following checklist:
     - State

@@ -17,9 +17,7 @@ alwaysApply: false
 - **Logging**
   - Import `logger` from `src.logging_config`.
   - First line of the node body logs its name:
-    - Regular node: `logger.debug("NODE: <node_name>")`
-    - Sub-agent node: `logger.debug("NODE: <sub-agent-name>.<node_name>")`
-    - Sub-agent wrapper: `logger.debug("NODE: wrapped_<agent>_agent")`
+    - Sub-agent node: `logger.debug("NODE: <agent-name>.<node_name>")`
   - Prefer `debug`, `warning`, `error`. Avoid `info` to reduce console noise.
 
 - **State IO contract**

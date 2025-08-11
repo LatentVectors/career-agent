@@ -21,7 +21,7 @@ alwaysApply: false
   - `# === NODES ===`: Register every node via `builder.add_node(Node.X, func, defer=<bool?>)`.
     - Use `defer=True` for nodes that should run after other nodes in the same step when applicable.
   - `# === EDGES ===`: Register linear and conditional edges.
-    - See @agent_edges.mdc for more details on implementing conditional edge.
+    - See @.cursor/rules/standards/agents/edges.mdc for more details on implementing conditional edge.
   - `# === GRAPH ===`: Compile and export the graph. Prefer the exported variable name `graph` (lowercase) across all agents.
     - For interactive or resumable graphs, compile with a checkpointer:
       ```python
@@ -38,13 +38,13 @@ alwaysApply: false
 
 - **Types and annotations**
   - Always type the state schemas explicitly as shown above.
-  - When using conditional edges, the edge functions must be typed per `.cursor/rules/agent_edges.mdc`.
+  - When using conditional edges, the edge functions must be typed per `.cursor/rules/standards/agents/edges.mdc`.
   - It is acceptable to add `# type: ignore[arg-type]` at `add_conditional_edges` call sites when needed by the checker.
 
 - **Edges (reference only)**
   - Linear edges: `builder.add_edge(Node.A, Node.B)`.
   - Conditional edges (routing and fan-out): `builder.add_conditional_edges(...)`.
-  - For full edge implementation rules (including `Send` with copied state), refer to @agent_edges.mdc.
+  - For full edge implementation rules (including `Send` with copied state), refer to @.cursor/rules/standards/agents/edges.mdc.
 
 - **Module escalation**
   - If `graph.py` grows too large, convert it to a module that exports: `Node`, `graph`, and optional runtime functions. Custom edge functions can be moved to sibling files within the module while keeping the same import surface.
